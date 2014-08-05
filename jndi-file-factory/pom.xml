@@ -4,11 +4,10 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>conan2</artifactId>
-        <groupId>uk.ac.ebi.fgpt</groupId>
-        <version>2.7.1-X</version>
+        <groupId>uk.ac.ebi.fgpt.conan</groupId>
+        <artifactId>conan</artifactId>
+        <version>3.0.0</version>
     </parent>
-    <groupId>uk.ac.ebi.fgpt</groupId>
     <artifactId>jndi-file-factory</artifactId>
     <version>1.0</version>
     <name>JNDI plugin for binding File Resource Factory in Tomcat</name>
