@@ -4,7 +4,6 @@ package uk.ac.ebi.fgpt.conan.model.param;
 import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 
 import java.io.IOException;
-import java.util.Map;
 
 
 /**

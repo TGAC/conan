@@ -2,7 +2,6 @@ package uk.ac.ebi.fgpt.conan.service;
 
 import org.junit.Before;
 import org.junit.Rule;
-import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.core.context.locality.Local;
@@ -10,8 +9,6 @@ import uk.ac.ebi.fgpt.conan.core.context.scheduler.lsf.LSFScheduler;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
 import uk.ac.ebi.fgpt.conan.model.context.Scheduler;
 import uk.ac.ebi.fgpt.conan.model.context.SchedulerArgs;
-
-import static org.junit.Assert.*;
 
 public class DefaultExecutorServiceTest {
 

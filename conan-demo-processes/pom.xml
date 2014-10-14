@@ -6,10 +6,10 @@
     <parent>
         <groupId>uk.ac.ebi.fgpt.conan</groupId>
         <artifactId>conan</artifactId>
-        <version>3.0.0</version>
+        <version>3.0.1</version>
     </parent>
     <artifactId>conan-demo-processes</artifactId>
-    <version>3.0.0</version>
+    <version>3.0.1</version>
     <name>Conan: Demo Processes</name>
 
     <dependencies>
