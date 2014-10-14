@@ -2,7 +2,9 @@ package uk.ac.ebi.fgpt.conan.model.param;
 
 import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created with IntelliJ IDEA.

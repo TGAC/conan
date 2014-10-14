@@ -2,7 +2,6 @@ package uk.ac.ebi.fgpt.conan.core.process;
 
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
-import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 
 /**
  * A implementation of a {@link ConanProcess} that decorates the underlying process with a display name that is distinct

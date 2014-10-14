@@ -1,6 +1,7 @@
 package uk.ac.ebi.fgpt.conan.util;
 
 import org.apache.commons.cli.*;
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
@@ -18,7 +19,6 @@ import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExternalProcessConfiguration;
 import uk.ac.ebi.fgpt.conan.model.context.Locality;
 import uk.ac.ebi.fgpt.conan.model.context.Scheduler;
-import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
 import uk.ac.ebi.fgpt.conan.properties.ConanProperties;
 import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
@@ -31,7 +31,6 @@ import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 /**
  * When creating an application that uses conan that can be controlled from the command line, this abstract class provides
@@ -171,6 +170,49 @@ public abstract class AbstractConanCLI {
         else {
             throw new IOException("Could not find conan.properties file at: " + this.environmentConfig.getAbsolutePath() +
                     "; A valid conan.properties file is required to run a conan pipeline.");
+        }
+    }
+
+    /**
+     * Checks the external process configuration file to ensure all entries conform to the provided set of keys.
+     * If not then an IOException is thrown describing the offending entry
+     * @param externalProcsFile The external process configuration file
+     * @param validExternalProcNames The set of valid process names
+     * @throws IOException Thrown if any entries in the file are not found in the provided set of process names
+     */
+    public void validateExternalProcs(File externalProcsFile, String[] validExternalProcNames) throws IOException {
+
+        List<String> lines = FileUtils.readLines(externalProcsFile);
+
+        int lineNumber = 1;
+        for(String line : lines) {
+
+            String trimmed = line.trim();
+            if (!trimmed.isEmpty() && !trimmed.startsWith("#")) {
+
+                String[] parts = trimmed.split("=");
+
+                if (parts.length != 2) {
+                    throw new IOException("Syntax error on line " + lineNumber + " in " + externalProcsFile.getAbsolutePath());
+                }
+
+                String key = parts[0].trim();
+
+                boolean found = false;
+
+                for(String extProc : validExternalProcNames) {
+                    if (extProc.equalsIgnoreCase(key)) {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    throw new IOException("Unknown external process name: " + key + "; at line " + lineNumber + " in " + externalProcsFile.getAbsolutePath());
+                }
+            }
+
+            lineNumber++;
         }
     }
 
