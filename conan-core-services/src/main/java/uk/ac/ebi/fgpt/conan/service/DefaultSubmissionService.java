@@ -6,6 +6,7 @@ import org.springframework.util.Assert;
 import uk.ac.ebi.fgpt.conan.dao.ConanTaskDAO;
 import uk.ac.ebi.fgpt.conan.model.ConanPipeline;
 import uk.ac.ebi.fgpt.conan.model.ConanTask;
+import uk.ac.ebi.fgpt.conan.model.context.TaskResult;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.exception.SubmissionException;
 
@@ -28,7 +29,7 @@ public class DefaultSubmissionService implements ConanSubmissionService {
     private final ExecutorService taskExecutor;
     private final int coolingOffPeriod;
 
-    private final ConcurrentMap<String, Future<Boolean>> executingFutures;
+    private final ConcurrentMap<String, Future<TaskResult>> executingFutures;
 
     private ConanTaskDAO conanTaskDAO;
 
@@ -37,7 +38,7 @@ public class DefaultSubmissionService implements ConanSubmissionService {
     public DefaultSubmissionService(int numberOfParallelJobs, int coolingOffPeriod) {
         this.taskExecutor = Executors.newFixedThreadPool(numberOfParallelJobs);
         this.coolingOffPeriod = coolingOffPeriod;
-        this.executingFutures = new ConcurrentHashMap<String, Future<Boolean>>();
+        this.executingFutures = new ConcurrentHashMap<String, Future<TaskResult>>();
     }
 
     protected Logger getLog() {
@@ -62,8 +63,8 @@ public class DefaultSubmissionService implements ConanSubmissionService {
         ConanTask duplicate = checkForDuplication(conanTask);
         if (duplicate == null) {
             // wrap task in a callable and submit
-            Future<Boolean> f = taskExecutor.submit(new Callable<Boolean>() {
-                public Boolean call() throws Exception {
+            Future<TaskResult> f = taskExecutor.submit(new Callable<TaskResult>() {
+                public TaskResult call() throws Exception {
                     ConanTask<? extends ConanPipeline> executingTask = null;
                     try {
                         // all tasks go into a holding pattern for a while before executing
@@ -123,7 +124,7 @@ public class DefaultSubmissionService implements ConanSubmissionService {
     }
 
     public void interruptTask(final ConanTask<? extends ConanPipeline> conanTask) {
-        Future<Boolean> f = executingFutures.get(conanTask.getId());
+        Future<TaskResult> f = executingFutures.get(conanTask.getId());
         if (f != null) {
             getLog().debug("Forcing interruption of Task ID = " + conanTask.getId());
             f.cancel(true);

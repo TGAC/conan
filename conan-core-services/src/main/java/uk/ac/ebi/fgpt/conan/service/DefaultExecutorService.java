@@ -1,10 +1,7 @@
 package uk.ac.ebi.fgpt.conan.service;
 
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
-import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
-import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
-import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
-import uk.ac.ebi.fgpt.conan.model.context.SchedulerArgs;
+import uk.ac.ebi.fgpt.conan.model.context.*;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 
 import java.io.File;
@@ -37,14 +34,14 @@ public class DefaultExecutorService implements ConanExecutorService {
     }
 
     @Override
-    public void executeScheduledWait(List<Integer> jobIds, String waitCondition, ExitStatus.Type exitStatusType, String jobName, File outputDir)
+    public MultiWaitResult executeScheduledWait(List<ExecutionResult> initialJobResults, String waitCondition, ExitStatus.Type exitStatusType, String jobName, File outputDir)
             throws ProcessExecutionException, InterruptedException {
 
         // Duplicate the execution context so we don't modify the original accidentally.
         ExecutionContext executionContextCopy = executionContext.copy();
         executionContextCopy.setContext(jobName, true, new File(outputDir, jobName + ".log"));
 
-        this.conanProcessService.executeScheduledWait(jobIds, waitCondition, exitStatusType, executionContextCopy);
+        return this.conanProcessService.executeScheduledWait(initialJobResults, waitCondition, exitStatusType, executionContextCopy);
     }
 
     @Override
@@ -85,6 +82,14 @@ public class DefaultExecutorService implements ConanExecutorService {
                                           int memoryMb, boolean runParallel, List<Integer> dependantJobs)
             throws InterruptedException, ProcessExecutionException {
 
+        return this.executeProcess(process, outputDir, jobName, threads, memoryMb, runParallel, null, false);
+    }
+
+    @Override
+    public ExecutionResult executeProcess(ConanProcess process, File outputDir, String jobName, int threads,
+                                          int memoryMb, boolean runParallel, List<Integer> dependantJobs, boolean openmpi)
+            throws InterruptedException, ProcessExecutionException {
+
         ExecutionContext executionContextCopy = this.executionContext.copy();
         executionContextCopy.setContext(jobName, !runParallel,
                 new File(outputDir, jobName + ".log"));
@@ -98,6 +103,10 @@ public class DefaultExecutorService implements ConanExecutorService {
             if (dependantJobs != null && !dependantJobs.isEmpty()) {
                 sArgs.setWaitCondition(executionContextCopy.getScheduler().createWaitCondition(
                         ExitStatus.Type.COMPLETED_ANY, dependantJobs));
+            }
+
+            if (openmpi && threads > 1) {
+                sArgs.setOpenmpi(true);
             }
         }
 

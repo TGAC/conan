@@ -1,7 +1,13 @@
 package uk.ac.ebi.fgpt.conan.core.context.scheduler.pbs;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
+import uk.ac.ebi.fgpt.conan.model.context.ResourceUsage;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 
 import static org.junit.Assert.assertTrue;
 
@@ -59,5 +65,37 @@ public class PBSSchedulerTest {
         int jobId = this.pbsScheduler.extractJobIdFromOutput(testLine);
 
         assertTrue(jobId == 4176);
+    }
+
+    @Test
+    public void testParseTraceJob() throws IOException {
+
+        File tjFile = FileUtils.toFile(this.getClass().getResource("/tracejob.pbs"));
+
+        List<String> linesList = FileUtils.readLines(tjFile);
+        String[] lines = linesList.toArray(new String[linesList.size()]);
+
+        ResourceUsage ru = this.pbsScheduler.parseTraceJobOutput(lines);
+
+        assertTrue(ru != null);
+        assertTrue(ru.getMaxMem() == 21);
+        assertTrue(ru.getCpuTime() == 91);
+        assertTrue(ru.getRunTime() == 10);
+    }
+
+    @Test
+    public void testParseTraceJob2() throws IOException {
+
+        File tjFile = FileUtils.toFile(this.getClass().getResource("/tracejob2.pbs"));
+
+        List<String> linesList = FileUtils.readLines(tjFile);
+        String[] lines = linesList.toArray(new String[linesList.size()]);
+
+        ResourceUsage ru = this.pbsScheduler.parseTraceJobOutput(lines);
+
+        assertTrue(ru != null);
+        assertTrue(ru.getMaxMem() == 0);
+        assertTrue(ru.getCpuTime() == 2);
+        assertTrue(ru.getRunTime() == 7);
     }
 }

@@ -19,11 +19,13 @@ package uk.ac.ebi.fgpt.conan.core.context.scheduler.oge;
 
 import uk.ac.ebi.fgpt.conan.core.context.scheduler.AbstractScheduler;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
+import uk.ac.ebi.fgpt.conan.model.context.ResourceUsage;
 import uk.ac.ebi.fgpt.conan.model.context.Scheduler;
 import uk.ac.ebi.fgpt.conan.model.monitor.ProcessAdapter;
 import uk.ac.ebi.fgpt.conan.util.StringJoiner;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 public class OGEScheduler extends AbstractScheduler {
@@ -133,6 +135,16 @@ public class OGEScheduler extends AbstractScheduler {
     @Override
     public String getJobIndexString() {
         return "${SGE_TASK_ID}";
+    }
+
+    @Override
+    public ResourceUsage getResourceUsageFromMonitorFile(File file) throws IOException {
+        return null;
+    }
+
+    @Override
+    public ResourceUsage getResourceUsageFromId(int id) {
+        return null;
     }
 
 }

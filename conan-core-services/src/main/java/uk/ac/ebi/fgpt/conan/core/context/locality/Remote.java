@@ -120,12 +120,12 @@ public class Remote implements Locality {
     }
 
     @Override
-    public ExecutionResult monitoredExecute(String command, Scheduler scheduler) {
+    public ExecutionResult monitoredExecute(String processName, String command, Scheduler scheduler) {
         throw new UnsupportedOperationException("Can't monitor progress on a remote session");
     }
 
     @Override
-    public ExecutionResult execute(String command, Scheduler scheduler) throws ProcessExecutionException, InterruptedException {
+    public ExecutionResult execute(String processName, String command, Scheduler scheduler) throws ProcessExecutionException, InterruptedException {
 
         String[] output;
         int exitCode;
@@ -149,7 +149,7 @@ public class Remote implements Locality {
             throw new ProcessExecutionException(-1, ioe);
         }
 
-        return new DefaultExecutionResult(exitCode, output, null);
+        return new DefaultExecutionResult(processName, exitCode, output, null);
     }
 
 
@@ -162,7 +162,7 @@ public class Remote implements Locality {
      * @throws InterruptedException
      */
     @Override
-    public ExecutionResult dispatch(String command, Scheduler scheduler)
+    public ExecutionResult dispatch(String processName, String command, Scheduler scheduler)
             throws ProcessExecutionException, InterruptedException {
 
         throw new UnsupportedOperationException("Can't dispatch tasks on a remote session");

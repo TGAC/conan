@@ -21,12 +21,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.conan.core.context.scheduler.AbstractScheduler;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
+import uk.ac.ebi.fgpt.conan.model.context.ResourceUsage;
 import uk.ac.ebi.fgpt.conan.model.context.Scheduler;
 import uk.ac.ebi.fgpt.conan.model.monitor.ProcessAdapter;
 import uk.ac.ebi.fgpt.conan.properties.ConanProperties;
 import uk.ac.ebi.fgpt.conan.util.StringJoiner;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class LSFScheduler extends AbstractScheduler {
@@ -148,6 +153,50 @@ public class LSFScheduler extends AbstractScheduler {
     @Override
     public String getJobIndexString() {
         return "\\$LSB_JOBINDEX";
+    }
+
+    @Override
+    public ResourceUsage getResourceUsageFromMonitorFile(File file) throws IOException {
+
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+
+            List<String> lines = new ArrayList<>();
+
+            for(int i = 0; i < 29 ; i++) {
+
+                String line = br.readLine();
+
+                if (line == null) {
+                    break;
+                    //throw new IOException("Encountered end of file sooner than expected while parsing LSF output file: " + file.getAbsolutePath());
+                }
+
+                lines.add(line.trim());
+            }
+
+            int cpuTime = 0;
+            int maxMem = 0;
+
+            for(String line : lines) {
+
+                if (line.startsWith("CPU time")) {
+                    String[] parts = line.split("\\s+");
+                    cpuTime = (int)Double.parseDouble(parts[3]);
+                }
+                else if (line.startsWith("Max Memory")) {
+                    String[] parts = line.split("\\s+");
+                    maxMem = Integer.parseInt(parts[3]);
+                }
+            }
+
+            return new ResourceUsage(maxMem, 0, cpuTime);
+        }
+
+    }
+
+    @Override
+    public ResourceUsage getResourceUsageFromId(int id) {
+        return null;
     }
 
 }

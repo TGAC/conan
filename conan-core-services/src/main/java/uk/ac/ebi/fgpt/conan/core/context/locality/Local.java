@@ -31,6 +31,7 @@ import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.ProcessRunner;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -90,7 +91,7 @@ public class Local implements Locality {
     }
 
     @Override
-    public ExecutionResult monitoredExecute(String command, Scheduler scheduler) throws InterruptedException, ProcessExecutionException {
+    public ExecutionResult monitoredExecute(String processName, String command, Scheduler scheduler) throws InterruptedException, ProcessExecutionException {
 
         // TODO, this is a mess... needs rethinking at some point.
 
@@ -124,7 +125,7 @@ public class Local implements Locality {
 
                 // Execute the proc (this is a scheduled proc so it should run in the background, managed by the scheduler,
                 // therefore we call the normal foreground execute method)
-                ExecutionResult result = this.execute(command, scheduler);
+                ExecutionResult result = this.execute(processName, command, scheduler);
 
                 if (result.getExitCode() != 0) {
                     throw new ProcessExecutionException(result.getExitCode(), "Process returned non-zero exit code: " + result.getExitCode());
@@ -138,7 +139,7 @@ public class Local implements Locality {
                         Set<Future<ExecutionResult>> set = new HashSet<>();
                         SchedulerArgs.JobArrayArgs jaa = scheduler.getArgs().getJobArrayArgs();
                         for(ProcessAdapter pa : processAdapters) {
-                            set.add(pool.submit(new ProcessAdaptorCallable(pa)));
+                            set.add(pool.submit(new ProcessAdaptorCallable(processName, pa)));
                         }
 
                         int exitCode = 0;
@@ -161,16 +162,29 @@ public class Local implements Locality {
                             message = new String[] {"Job Array Error: " + errorCount + " out of " + processAdapters.size() + " jobs failed in the array."};
                         }
 
-                        result = new DefaultExecutionResult(exitCode, message, scheduler.getArgs().getMonitorFile());
+                        result = new DefaultExecutionResult(processName, exitCode, message, scheduler.getArgs().getMonitorFile());
                     }
                     else {
+
+                        ProcessAdapter pa = processAdapters.get(0);
+
                         // Override result with info from the wait command.
-                        result = this.waitFor(processAdapters.get(0), new InvocationTrackingProcessListener());
+                        ExecutionResult waitResult = this.waitFor(processName, pa, new InvocationTrackingProcessListener());
+
+                        return new DefaultExecutionResult(
+                                processName,
+                                waitResult.getExitCode(),
+                                pa.getProcessOutput(),
+                                pa.getFile(),
+                                result.getJobId(),
+                                scheduler.getResourceUsageFromMonitorFile(pa.getFile()));
                     }
                 }
 
                 return result;
             //}
+        } catch (IOException ioe) {
+            throw new ProcessExecutionException(-1, ioe);
         } finally {
             // Remove the monitor, even if we are in recovery mode or there was an error.
             //processAdapter.removeMonitor();
@@ -182,9 +196,11 @@ public class Local implements Locality {
 
     private static class ProcessAdaptorCallable
             implements Callable<ExecutionResult> {
+        private String name;
         private ProcessAdapter pa;
         private ProcessListener pl;
-        public ProcessAdaptorCallable(ProcessAdapter pa) {
+        public ProcessAdaptorCallable(String processName, ProcessAdapter pa) {
+            this.name = processName;
             this.pa = pa;
             this.pl = new InvocationTrackingProcessListener();
         }
@@ -200,7 +216,7 @@ public class Local implements Locality {
                 exitValue = this.pl.waitFor();
                 log.debug("Process completed with exit value: " + exitValue);
 
-                return new DefaultExecutionResult(exitValue, pa.getProcessOutput(), pa.getFile());
+                return new DefaultExecutionResult(this.name, exitValue, pa.getProcessOutput(), pa.getFile());
             }
             catch(InterruptedException e) {
                 return null;
@@ -210,7 +226,7 @@ public class Local implements Locality {
 
 
     @Override
-    public ExecutionResult execute(String command, Scheduler scheduler) throws ProcessExecutionException, InterruptedException {
+    public ExecutionResult execute(String processName, String command, Scheduler scheduler) throws ProcessExecutionException, InterruptedException {
 
         String[] output;
 
@@ -240,20 +256,33 @@ public class Local implements Locality {
             throw new ProcessExecutionException(1, message, e);
         }
 
-        int jobId = scheduler != null && scheduler.generatesJobIdFromOutput() ? scheduler.extractJobIdFromOutput(output[0]) : -1;
+        int jobId = -1;
+        File outputFile = null;
+
+        if (scheduler != null) {
+
+            if (scheduler.generatesJobIdFromOutput()) {
+                jobId = scheduler.extractJobIdFromOutput(output[0]);
+            }
+
+            if (scheduler.getArgs() != null && scheduler.getArgs().getMonitorFile() != null) {
+                outputFile = scheduler.getArgs().getMonitorFile();
+            }
+        }
 
         if (jobId != -1)
             log.debug("Job ID detected: " + jobId);
 
-        return new DefaultExecutionResult(0, output, null, jobId);
+        return new DefaultExecutionResult(processName, 0, output, outputFile, jobId);
     }
 
     @Override
-    public ExecutionResult dispatch(String command, Scheduler scheduler) throws ProcessExecutionException, InterruptedException {
+    public ExecutionResult dispatch(String processName, String command, Scheduler scheduler)
+            throws ProcessExecutionException, InterruptedException {
 
         // Actually for the moment we assume that this is only called for scheduled tasks.  Doesn't make much sense
         // as implemented right now for tasks running on the local host.
-        return this.execute(command, scheduler);
+        return this.execute(processName, command, scheduler);
     }
 
     /**
@@ -263,6 +292,7 @@ public class Local implements Locality {
      * starting another job.  Once the job has completed the exit value is returned from this method, otherwise an exception
      * is thrown.
      *
+     * @param processName The name of the process to monitor
      * @param processAdapter The ProcessAdapter which monitors process progress job.
      * @param processListener The ProcessListener which maintains process state.
      * @return An exit value describing the completion status of the job.
@@ -270,7 +300,7 @@ public class Local implements Locality {
      *
      * @throws InterruptedException
      */
-    protected ExecutionResult waitFor(ProcessAdapter processAdapter, ProcessListener processListener) throws ProcessExecutionException, InterruptedException {
+    protected ExecutionResult waitFor(String processName, ProcessAdapter processAdapter, ProcessListener processListener) throws ProcessExecutionException, InterruptedException {
 
         processAdapter.addTaskListener(processListener);
 
@@ -284,7 +314,7 @@ public class Local implements Locality {
             log.debug("Process completed with exit value: " + exitValue);
 
             if (exitValue == 0) {
-                return new DefaultExecutionResult(exitValue, new String[]{}, processAdapter.getFile());
+                return new DefaultExecutionResult(processName, exitValue, processAdapter.getProcessOutput(), processAdapter.getFile());
             } else {
                 ProcessExecutionException pex = new ProcessExecutionException(exitValue);
                 pex.setProcessOutput(processAdapter.getProcessOutput());

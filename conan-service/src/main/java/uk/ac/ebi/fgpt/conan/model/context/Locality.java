@@ -17,6 +17,7 @@ public interface Locality {
      * wait until the command has completed before returning with the exitCode produced from executing
      * the command.
      *
+     * @param processName The name of the process that is to be executed (used for resource usage tracking later)
      * @param command The command that is to be executed in the foreground
      * @param scheduler      The {@link Scheduler} which may have its own custom way of monitoring the tasks progress
      * @return The exitCode from the proc that was executed
@@ -24,12 +25,13 @@ public interface Locality {
      * @throws uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException
      *
      */
-    ExecutionResult execute(String command, Scheduler scheduler)
+    ExecutionResult execute(String processName, String command, Scheduler scheduler)
             throws ProcessExecutionException, InterruptedException;
 
     /**
      * Intended for executing Scheduled Tasks in the foreground.
      *
+     * @param processName The name of the process that is to be executed (used for resource usage tracking later)
      * @param command        The command to execute.
      * @param scheduler      The {@link Scheduler} which may have its own custom way of monitoring the tasks progress
      * @return The exitCode from the proc that was executed
@@ -37,7 +39,7 @@ public interface Locality {
      * @throws uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException
      *
      */
-    ExecutionResult monitoredExecute(String command, Scheduler scheduler)
+    ExecutionResult monitoredExecute(String processName, String command, Scheduler scheduler)
             throws InterruptedException, ProcessExecutionException;
 
     /**
@@ -45,13 +47,14 @@ public interface Locality {
      * by this object.  Will dispatch the command and leave it running in the background.  This is typically used when
      * the user wants to execute multiple command in parallel.
      *
+     * @param processName The name of the process that is to be executed (used for resource usage tracking later)
      * @param command The command that is to be executed in the background
      * @param scheduler      The {@link Scheduler} which may have its own custom way of monitoring the tasks progress
      * @throws InterruptedException
      * @throws uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException
      *
      */
-    ExecutionResult dispatch(String command, Scheduler scheduler)
+    ExecutionResult dispatch(String processName, String command, Scheduler scheduler)
             throws ProcessExecutionException, InterruptedException;
 
     /**

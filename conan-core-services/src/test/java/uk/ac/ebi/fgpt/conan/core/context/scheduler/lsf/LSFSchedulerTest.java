@@ -17,8 +17,13 @@
  **/
 package uk.ac.ebi.fgpt.conan.core.context.scheduler.lsf;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
+import uk.ac.ebi.fgpt.conan.model.context.ResourceUsage;
+
+import java.io.File;
+import java.io.IOException;
 
 import static org.junit.Assert.assertTrue;
 
@@ -68,5 +73,16 @@ public class LSFSchedulerTest {
         int jobId = this.lsfScheduler.extractJobIdFromOutput(testLine);
 
         assertTrue(jobId == 133704);
+    }
+
+    @Test
+    public void testParseLsfOutput() throws IOException {
+
+        File lsfFile = FileUtils.toFile(this.getClass().getResource("/lsfoutput.lsf"));
+
+        ResourceUsage ru = this.lsfScheduler.getResourceUsageFromMonitorFile(lsfFile);
+
+        assertTrue(ru.getCpuTime() == 137);
+        assertTrue(ru.getMaxMem() == 214);
     }
 }

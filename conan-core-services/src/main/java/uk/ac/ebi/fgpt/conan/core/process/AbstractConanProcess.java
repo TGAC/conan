@@ -264,32 +264,32 @@ public abstract class AbstractConanProcess implements ConanProcess {
     }
 
     @Override
-    public boolean execute()
+    public ExecutionResult execute()
             throws ProcessExecutionException, InterruptedException {
 
         return this.execute(this.conanExecutorService.getExecutionContext());
     }
 
     @Override
-    public boolean execute(ExecutionContext executionContext)
+    public ExecutionResult execute(ExecutionContext executionContext)
             throws ProcessExecutionException, InterruptedException {
 
-        ExecutionResult result = this.conanExecutorService.getConanProcessService().execute(this, executionContext);;
+        ExecutionResult result = this.conanExecutorService.getConanProcessService().execute(this, executionContext);
 
         this.jobId = result.getJobId();
 
-        return result.getExitCode() == 0;
+        return result;
     }
 
     @Override
-    public boolean execute(Map<ConanParameter, String> parameters)
+    public ExecutionResult execute(Map<ConanParameter, String> parameters)
             throws ProcessExecutionException, InterruptedException {
 
         return this.execute(parameters, new DefaultExecutionContext());
     }
 
     @Override
-    public boolean execute(Map<ConanParameter, String> parameters, ExecutionContext executionContext)
+    public ExecutionResult execute(Map<ConanParameter, String> parameters, ExecutionContext executionContext)
             throws ProcessExecutionException, InterruptedException {
 
         // Ignore for the time being... think the original way of setting arguments doesn't make sense.

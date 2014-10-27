@@ -2,6 +2,7 @@ package uk.ac.ebi.fgpt.conan.model;
 
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.context.TaskResult;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
 
@@ -62,11 +63,11 @@ public interface ConanTask<P extends ConanPipeline> extends Serializable {
      * This method returns true if the task succeeds (indicating all constituent Processes, by definition, succeeded) or
      * false otherwise.
      *
-     * @return true if the execution completed successfully, false if not
+     * @return The results from executing this task, including resource usage
      * @throws TaskExecutionException if the execution of the task caused an exception
      * @throws InterruptedException   if the execution of the task was interrupted
      */
-    boolean execute() throws TaskExecutionException, InterruptedException;
+    TaskResult execute() throws TaskExecutionException, InterruptedException;
 
     /**
      * Executes this task within a specific {@link ExecutionContext}.  To execute a task means that each
@@ -87,11 +88,11 @@ public interface ConanTask<P extends ConanPipeline> extends Serializable {
      * This method returns true if the task succeeds (indicating all constituent Processes, by definition, succeeded) or
      * false otherwise.
      *
-     * @return true if the execution completed successfully, false if not
+     * @return The results from executing this task, including resource usage
      * @throws TaskExecutionException if the execution of the task caused an exception
      * @throws InterruptedException   if the execution of the task was interrupted
      */
-    boolean execute(ExecutionContext executionContext) throws TaskExecutionException, InterruptedException;
+    TaskResult execute(ExecutionContext executionContext) throws TaskExecutionException, InterruptedException;
 
     /**
      * Gets the priority of this task.  High priority tasks should always be executed before medium priority tasks, and

@@ -3,6 +3,7 @@ package uk.ac.ebi.fgpt.conan.model;
 //import net.sourceforge.fluxion.spi.Spi;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
@@ -94,9 +95,9 @@ public interface ConanProcess extends Serializable {
      * Executes this process with the managed {@link uk.ac.ebi.fgpt.conan.model.context.ExecutionContext}.  Assumes the
      * process arguments have all been set
      *
-     * @return Whether this <code>ConanProcess</code> executed successfully or not.
+     * @return The result of executing this <code>ConanProcess</code>
      */
-    boolean execute()
+    ExecutionResult execute()
             throws ProcessExecutionException, InterruptedException, ConanParameterException;
 
     /**
@@ -104,18 +105,18 @@ public interface ConanProcess extends Serializable {
      * process arguments have all been set
      *
      * @param executionContext The execution context within which to execute this <code>ConanProcess</code>
-     * @return Whether this <code>ConanProcess</code> executed successfully or not.
+     * @return The result of executing this <code>ConanProcess</code>
      */
-    boolean execute(ExecutionContext executionContext)
+    ExecutionResult execute(ExecutionContext executionContext)
             throws ProcessExecutionException, InterruptedException, ConanParameterException;
 
     /**
      * Executes this process within a defined {@link ExecutionContext}, provides the process with arguments.
      *
      * @param executionContext The execution context within which to execute this <code>ConanProcess</code>
-     * @return Whether this <code>ConanProcess</code> executed successfully or not.
+     * @return The result of executing this <code>ConanProcess</code>
      */
-    boolean execute(Map<ConanParameter, String> params, ExecutionContext executionContext)
+    ExecutionResult execute(Map<ConanParameter, String> params, ExecutionContext executionContext)
             throws ProcessExecutionException, InterruptedException, ConanParameterException;
 
     /**
@@ -140,14 +141,14 @@ public interface ConanProcess extends Serializable {
      * catch and swallow any exceptions before returning false.
      *
      * @param parameters maps parameters to the supplied values required in order to execute a process
-     * @return true if the execution completed successfully, false if not
+     * @return The result of executing this <code>ConanProcess</code>
      * @throws ProcessExecutionException if the execution of the process caused an exception
      * @throws IllegalArgumentException  if an incorrect set of parameter values has been supplied, or if required
      *                                   values are null
      * @throws InterruptedException      if the execution of a process is interrupted, which causes it to terminate
      *                                   early
      */
-    boolean execute(Map<ConanParameter, String> parameters)
+    ExecutionResult execute(Map<ConanParameter, String> parameters)
             throws ProcessExecutionException, IllegalArgumentException, InterruptedException, ConanParameterException;
 
     /**

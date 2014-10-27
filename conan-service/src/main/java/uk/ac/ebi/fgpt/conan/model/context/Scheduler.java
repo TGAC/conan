@@ -4,6 +4,7 @@ package uk.ac.ebi.fgpt.conan.model.context;
 import uk.ac.ebi.fgpt.conan.model.monitor.ProcessAdapter;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 
@@ -140,4 +141,31 @@ public interface Scheduler {
      * @return The string that represent the job array index for this scheduler.
      */
     String getJobIndexString();
+
+    /**
+     * Returns the amount of basic system resources used by this process, using the provided monitor file as input.
+     * @param file The monitor file
+     * @return The resources used by specified scheduled process, could be null if not resource usage information can be
+     *          found
+     * @throws IOException Thrown if there was an issue acquiring the resource information
+     */
+    ResourceUsage getResourceUsageFromMonitorFile(File file) throws IOException;
+
+    /**
+     * Gets resource usage for the completed job, defined by the job id.
+     * @param id The id of the completed job
+     * @return The resources used by the specific process, could be null if not resource usage information can be
+     *          found
+     */
+    ResourceUsage getResourceUsageFromId(int id);
+
+    /**
+     * Gets resource usage for the completed job
+     * @param executionResult Initial result from starting job.  Should contain monitor file location or job id to use
+     *                        to derive the resource usage information.
+     * @return The resources used by the specific process, could be null if not resource usage information can be
+     *          found
+     * @throws IOException Thrown if there was an issue acquiring the resource information
+     */
+    ResourceUsage getResourceUsage(ExecutionResult executionResult) throws IOException;
 }

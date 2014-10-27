@@ -2,6 +2,7 @@ package uk.ac.ebi.fgpt.conan.core.process;
 
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
@@ -66,25 +67,25 @@ public abstract class AbstractProcessDecorator implements ConanProcess {
     }
 
     @Override
-    public boolean execute(Map<ConanParameter, String> parameters)
+    public ExecutionResult execute(Map<ConanParameter, String> parameters)
             throws ProcessExecutionException, InterruptedException, ConanParameterException {
         return process.execute(parameters);
     }
 
     @Override
-    public boolean execute(ExecutionContext executionContext)
+    public ExecutionResult execute(ExecutionContext executionContext)
             throws ProcessExecutionException, InterruptedException, ConanParameterException {
         return process.execute(executionContext);
     }
 
     @Override
-    public boolean execute()
+    public ExecutionResult execute()
             throws ProcessExecutionException, InterruptedException, ConanParameterException {
         return process.execute();
     }
 
     @Override
-    public boolean execute(Map<ConanParameter, String> parameters, ExecutionContext executionContext)
+    public ExecutionResult execute(Map<ConanParameter, String> parameters, ExecutionContext executionContext)
             throws ProcessExecutionException, InterruptedException, ConanParameterException {
         return process.execute(parameters, executionContext);
     }
