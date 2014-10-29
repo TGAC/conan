@@ -17,16 +17,23 @@
  **/
 package uk.ac.ebi.fgpt.conan.core.context.scheduler.pbs;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.conan.core.context.scheduler.AbstractScheduler;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
+import uk.ac.ebi.fgpt.conan.model.context.ResourceUsage;
 import uk.ac.ebi.fgpt.conan.model.context.Scheduler;
 import uk.ac.ebi.fgpt.conan.model.monitor.ProcessAdapter;
 import uk.ac.ebi.fgpt.conan.util.StringJoiner;
+import uk.ac.ebi.fgpt.conan.utils.ProcessRunner;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 public class PBSScheduler extends AbstractScheduler {
+
+    private static Logger log = LoggerFactory.getLogger(PBSScheduler.class);
 
     public static final String QSUB = "qsub";
     public static final String ARG_SEPARATOR = ":";
@@ -134,6 +141,125 @@ public class PBSScheduler extends AbstractScheduler {
     @Override
     public String getJobIndexString() {
         return "${PBS_ARRAY_INDEX}";
+    }
+
+    @Override
+    public ResourceUsage getResourceUsageFromMonitorFile(File file) throws IOException {
+        return null;
+    }
+
+    @Override
+    public ResourceUsage getResourceUsageFromId(int id) {
+
+        try {
+            // Run tracejob with ID
+            ProcessRunner runner = new ProcessRunner();
+
+            int n = 0;
+            int nbLines = 0;
+            boolean success = false;
+            String[] output;
+
+            do {
+
+                output = runner.runCommmand("tracejob " + id);
+
+                int res = this.waitLonger(output);
+
+                if (res == -1) {
+                    throw new IllegalStateException("Could not find any content from PBS tracejob command for job: " + id);
+                }
+                else if (res > 0) {
+
+                    if (res < nbLines) {
+                        throw new IllegalStateException("No progress from PBS tracejob command for job: " + id);
+                    }
+
+                    log.debug("Could not find enough content from tracejob for job " + id + " yet.  Waiting 5 seconds and trying again.");
+                    Thread.sleep(5000);
+                }
+                else {
+                    success = true;
+                }
+
+                nbLines = res;
+                n++;
+
+            } while(n <= 3 && !success);
+
+            if (!success) {
+                throw new IllegalStateException("Could not get any resource usage information from PBS tracejob command for job: " + id);
+            }
+
+            return this.parseTraceJobOutput(output);
+        }
+        catch (Exception e) {
+            log.error("Encountered problem acquiring PBS resource usage information for job: " + id, e);
+            return null;
+        }
+    }
+
+    protected int waitLonger(String[] traceJobOut) {
+        for(String line : traceJobOut) {
+
+            if (line.length() > 27 && line.contains("resources_used")) {
+                return 0;
+            }
+        }
+
+        if (traceJobOut.length > 5) {
+            return traceJobOut.length;
+        }
+
+        return -1;
+    }
+
+    protected ResourceUsage parseTraceJobOutput(String[] traceJobOut) {
+
+        int maxMem = 0;
+        long cpuTime = 0;
+        long wallClock = 0;
+
+        for(String line : traceJobOut) {
+
+            if (line.length() > 27 && line.contains("resources_used")) {
+
+                String resInfo = line.substring(26);
+                String[] resArr = resInfo.split("\\s+");
+
+                for (String res : resArr) {
+
+                    if (res.startsWith("resources_used")) {
+                        String data = res.substring(15);
+
+                        String[] resDataParts = data.split("=");
+                        String key = resDataParts[0];
+                        String val = resDataParts[1];
+
+                        if (key.equalsIgnoreCase("cput")) {
+                            cpuTime = this.timeToSeconds(val);
+                        } else if (key.equalsIgnoreCase("mem")) {
+                            maxMem = Integer.parseInt(val.substring(0, val.length() - 2)) / 1000;
+                        } else if (key.equalsIgnoreCase("walltime")) {
+                            wallClock = this.timeToSeconds(val);
+                        }
+                    }
+                }
+            }
+        }
+
+        return new ResourceUsage(maxMem, wallClock, cpuTime);
+    }
+
+    private long timeToSeconds(String time) {
+
+        String[] parts = time.split(":");
+
+        long seconds = Long.parseLong(parts[2]);
+        long minutes = Long.parseLong(parts[1]);
+        long hours = Long.parseLong(parts[0]);
+
+        return (((hours * 60) + minutes) * 60) + seconds;
     }
 
 }

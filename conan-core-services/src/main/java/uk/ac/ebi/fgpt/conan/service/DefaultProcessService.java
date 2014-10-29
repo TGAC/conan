@@ -14,6 +14,7 @@ import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -87,26 +88,54 @@ public class DefaultProcessService implements ConanProcessService {
                     command + " will not be submitted.");
         }
 
-        ExecutionResult result = null;
+        ExecutionResult result;
 
         if (executionContext.usingScheduler()) {
 
             Scheduler scheduler = executionContext.getScheduler();
 
+            // Generate the command line, including commands to submit process to the scheduler as a job
             String commandToExecute = scheduler.createCommand(command, executionContext.isForegroundJob());
 
+            final String jobName = executionContext.getJobName();
+
             if (executionContext.isForegroundJob()) {
-                log.info("Running scheduled command in foreground [" + commandToExecute + "].");
-                result = locality.monitoredExecute(commandToExecute, scheduler);
+                log.info("Running scheduled job \"" + jobName + "\" with command in foreground [" + commandToExecute + "].");
+
+                // If scheduler uses file monitor then do a monitored execution.  This means that the scheduler will
+                // initially return from executing the job, and we monitor a file to see how the job is progressing.
+                // Once the file contains the information describing that the job is finished then we can return from
+                // the monitored execute method.
+                // If the scheduler doesn't use file monitoring we assume it has some kind of blocking function so that
+                // control from the command line isn't returned until the job has completed.  In this case we just do
+                // as simple execute.
+                if (scheduler.usesFileMonitor()) {
+                    result = locality.monitoredExecute(jobName, commandToExecute, scheduler);
+                }
+                else {
+                    result = locality.execute(jobName, commandToExecute, scheduler);
+                }
+
+                // Get output from the executed job
                 String details = result.getOutputFile() != null && result.getOutputFile().exists() ?
                         "Output from this command can be found at: \"" + result.getOutputFile().getAbsolutePath() + "\"" :
                         "Output: \n" + StringUtils.join(result.getOutput(), "\n") + "\n";
 
-                log.debug("Finished executing command [" + command + "].  " + details);
+                // Get resource usage information
+                try {
+                    ResourceUsage ru = scheduler.getResourceUsage(result);
+                    log.debug("Resource Usage for job \"" + jobName + "\" is: " + ru.toString(true));
+                    result.setResourceUsage(ru);
+                }
+                catch (IOException e) {
+                    throw new ProcessExecutionException(1, "Could not acquire resource usage information from scheduler", e);
+                }
+
+                log.debug("Finished executing job \"" + jobName + "\".  Output: " + details);
             }
             else {
                 log.info("Running scheduled command in background [" + commandToExecute + "].");
-                result = locality.dispatch(commandToExecute, scheduler);
+                result = locality.dispatch(executionContext.getJobName(), commandToExecute, scheduler);
                 log.debug("Successfully dispatched command [" + command + "].  Output:\n" +
                         StringUtils.join(result.getOutput(), "\n") + "\n");
             }
@@ -115,7 +144,7 @@ public class DefaultProcessService implements ConanProcessService {
 
             if (executionContext.isForegroundJob()) {
                 log.info("Running command in foreground [" + command + "].");
-                result = locality.execute(command, null);
+                result = locality.execute(executionContext.getJobName(), command, null);
 
                 if (executionContext.getMonitorFile() != null) {
                     try {
@@ -156,7 +185,7 @@ public class DefaultProcessService implements ConanProcessService {
 
         String waitCommand = scheduler.createWaitCommand(waitCondition);
 
-        return executionContext.getLocality().monitoredExecute(waitCommand, scheduler);
+        return executionContext.getLocality().monitoredExecute("wait", waitCommand, scheduler);
     }
 
     @Override
@@ -174,7 +203,7 @@ public class DefaultProcessService implements ConanProcessService {
 
 
     @Override
-    public void executeScheduledWait(List<Integer> jobIds, String waitCondition, ExitStatus.Type exitStatusType,
+    public MultiWaitResult executeScheduledWait(List<ExecutionResult> dependentJobs, String waitCondition, ExitStatus.Type exitStatusType,
                                      ExecutionContext executionContext)
             throws ProcessExecutionException, InterruptedException {
 
@@ -183,11 +212,28 @@ public class DefaultProcessService implements ConanProcessService {
 
         Scheduler scheduler = executionContext.getScheduler();
 
+        List<Integer> jobIds = new ArrayList<>();
+
+        for(ExecutionResult res : dependentJobs) {
+            jobIds.add(res.getJobId());
+        }
+
         String condition = scheduler.generatesJobIdFromOutput() ?
                 scheduler.createWaitCondition(exitStatusType, jobIds) :
                 scheduler.createWaitCondition(exitStatusType, waitCondition);
 
-        this.waitFor(condition, executionContext);
+        ExecutionResult waitResult = this.waitFor(condition, executionContext);
+
+        try {
+            for (ExecutionResult res : dependentJobs) {
+                res.setResourceUsage(scheduler.getResourceUsage(res));
+            }
+        }
+        catch (IOException e) {
+            throw new ProcessExecutionException(1, "Couldn't acquire resource usage from dependent jobs", e);
+        }
+
+        return new MultiWaitResult(waitResult, dependentJobs);
     }
 
     /**

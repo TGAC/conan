@@ -1,0 +1,31 @@
+
+Job: 121773.UV00000010-P002
+
+10/21/2014 15:24:57  S    enqueuing into Prod, state 1 hop 1
+10/21/2014 15:24:57  S    Job Queued at request of maplesod@uv00000010-p002, owner = maplesod@uv00000010-p002,
+                          job name = -789488615, queue = Prod
+10/21/2014 15:24:58  L    Considering job to run
+10/21/2014 15:24:58  S    Job Run at request of Scheduler@uv00000010-p002 on exec_vnode
+                          (UV00000010-P002[54]:ncpus=8+UV00000010-P002[55]:ncpus=8)
+10/21/2014 15:24:58  S    Job Modified at request of Scheduler@uv00000010-p002
+10/21/2014 15:24:58  L    Job run
+10/21/2014 15:24:58  M    Resource_List.place = free
+10/21/2014 15:24:58  M    created cpuset /PBSPro/121773.UV00000010-P002
+10/21/2014 15:24:58  M    new_cpuset:  setting altid to CPU set named /PBSPro/121773.UV00000010-P002
+10/21/2014 15:24:58  M    Started, pid = 363897
+10/21/2014 15:25:08  S    Obit received momhop:1 serverhop:1 state:4 substate:42
+10/21/2014 15:25:08  M    task 00000001 terminated
+10/21/2014 15:25:08  M    Terminated
+10/21/2014 15:25:08  M    task 00000001 cput= 0:01:31
+10/21/2014 15:25:08  M    kill_job
+10/21/2014 15:25:08  M    UV00000010-P002 cput= 0:01:31 mem=21040kb
+10/21/2014 15:25:08  M    no active tasks
+10/21/2014 15:25:08  M    Obit sent
+10/21/2014 15:25:08  M    copy file request received
+10/21/2014 15:25:08  M    staged 2 items out over 0:00:00
+10/21/2014 15:25:09  S    Exit_status=0 resources_used.cpupercent=0 resources_used.cput=00:01:31
+                          resources_used.mem=21040kb resources_used.ncpus=16 resources_used.vmem=1077300kb
+                          resources_used.walltime=00:00:10
+10/21/2014 15:25:09  M    no active tasks
+10/21/2014 15:25:09  M    delete job request received
+10/21/2014 15:25:09  M    delete cpuset /PBSPro/121773.UV00000010-P002

@@ -56,7 +56,7 @@ public class LocalTest {
     @Test
     public void executeTest() throws InterruptedException, ProcessExecutionException, CommandExecutionException, IOException {
 
-        ExecutionResult executionResult = this.local.execute(CMD, scheduler);
+        ExecutionResult executionResult = this.local.execute("test", CMD, scheduler);
 
         assertTrue(executionResult.getExitCode() == 0);
     }
@@ -64,7 +64,7 @@ public class LocalTest {
     @Test
     public void monitoredExecuteTest() throws InterruptedException, ProcessExecutionException, CommandExecutionException, IOException {
 
-        ExecutionResult executionResult = this.local.monitoredExecute(CMD, scheduler);
+        ExecutionResult executionResult = this.local.monitoredExecute("test", CMD, scheduler);
 
         assertTrue(executionResult.getExitCode() == 0);
     }
@@ -72,7 +72,7 @@ public class LocalTest {
     @Test
     public void dispatchTest() throws InterruptedException, ProcessExecutionException, CommandExecutionException, IOException {
 
-        this.local.dispatch(CMD, scheduler);
+        this.local.dispatch("test", CMD, scheduler);
     }
 
 }

@@ -1,10 +1,7 @@
 package uk.ac.ebi.fgpt.conan.service;
 
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
-import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
-import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
-import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
-import uk.ac.ebi.fgpt.conan.model.context.SchedulerArgs;
+import uk.ac.ebi.fgpt.conan.model.context.*;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 
 import java.io.File;
@@ -32,16 +29,17 @@ public interface ConanExecutorService {
      * This executes a waiting job for the scheduler defined in the execution context.  It will wait until either the
      * list of other scheduled jobs denoted by their IDs have concluded and in which state.  We supply the jobname and
      * the output directory so the the log for this waitjob is put into a sensible place and is called a sensible name.
-     * @param jobIds The job ids that should be completed.
+     * @param initialJobResults The initial results from the jobs that we should wait for.
      * @param waitCondition If the scheduler doesn't use job ids we can also try waiting by job name (Note: this can be
      *                      unreliable when running lots of jobs in parallel on the same system!)
      * @param exitStatusType The exit condition that must be satisfied
      * @param jobName The jobname
      * @param outputDir The output directory
+     * @return The results from this wait job and all the dependent jobs
      * @throws ProcessExecutionException
      * @throws InterruptedException
      */
-    void executeScheduledWait(List<Integer> jobIds, String waitCondition, ExitStatus.Type exitStatusType,
+    MultiWaitResult executeScheduledWait(List<ExecutionResult> initialJobResults, String waitCondition, ExitStatus.Type exitStatusType,
                               String jobName, File outputDir)
             throws ProcessExecutionException, InterruptedException;
 
@@ -103,6 +101,28 @@ public interface ConanExecutorService {
      */
     ExecutionResult executeProcess(ConanProcess process, File outputDir, String jobName, int threads,
                                    int memoryMb, boolean runParallel, List<Integer> dependentJobs)
+            throws InterruptedException, ProcessExecutionException;
+
+    /**
+     * Executes a conan process within the defined execution context.  We can supply resource data for use by the
+     * scheduler (if requested).  The runParallel options allows us to execute this job in parallel with other jobs.  i.e
+     * we don't wait for the job to complete before returning.  In this case the method returns an ExecutionResult object
+     * which will contain the allocated jobId which the client can manually track and use with the executeScheduledWait
+     * command to control where the program flow should pause until the job's completion.
+     * @param process The process to execute
+     * @param outputDir Where output from this process should go
+     * @param jobName The schedulers job name
+     * @param threads The threads to request from the scheduler
+     * @param memoryMb The memory to request from the scheduler
+     * @param runParallel Whether to run this job in the foreground or the background
+     * @param dependentJobs The list of jobs that should complete (one way or another) before this job should start
+     * @param openmpi Whether this job uses openmpi or not
+     * @return An executionResult object containing the job id (if run on a scheduler) and the jobs standard output.
+     * @throws InterruptedException
+     * @throws ProcessExecutionException
+     */
+    ExecutionResult executeProcess(ConanProcess process, File outputDir, String jobName, int threads,
+                                   int memoryMb, boolean runParallel, List<Integer> dependentJobs, boolean openmpi)
             throws InterruptedException, ProcessExecutionException;
 
     /**

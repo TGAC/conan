@@ -17,7 +17,9 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 
@@ -64,7 +66,7 @@ public abstract class AbstractRESTAPIProcess implements ConanProcess {
      * @throws InterruptedException      if the execution of a process is interrupted, which causes it to terminate
      *                                   early
      */
-    public boolean execute(Map<ConanParameter, String> parameters)
+    public ExecutionResult execute(Map<ConanParameter, String> parameters)
             throws ProcessExecutionException, IllegalArgumentException,
             InterruptedException {
         // process exit value, initialise to -1
@@ -161,7 +163,9 @@ public abstract class AbstractRESTAPIProcess implements ConanProcess {
 
                         ProcessExecutionException pex = new ProcessExecutionException(exitValue, getMessage(response));
                         if (exitValue == 0) {
-                            return true;
+                            String[] errors = new String[1];
+                            errors[0] = getMessage(response);
+                            return new DefaultExecutionResult("rest", 0, errors, null);
                         }
                         else {
                             String[] errors = new String[1];
@@ -174,11 +178,11 @@ public abstract class AbstractRESTAPIProcess implements ConanProcess {
                     else {
                         exitValue = 0;
                         log.write("REST API Process completed with exit value " + exitValue + "\n");
-                        return true;
+                        return new DefaultExecutionResult("rest", 0, new String[]{}, null);
                     }
             }
             else {
-                return false;
+                return new DefaultExecutionResult("rest", 1, new String[] {"Login not successfull."}, null);
             }
         }
         catch (IOException e) {

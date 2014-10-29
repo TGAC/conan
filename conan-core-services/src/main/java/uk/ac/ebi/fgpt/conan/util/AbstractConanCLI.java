@@ -15,10 +15,7 @@ import uk.ac.ebi.fgpt.conan.factory.DefaultTaskFactory;
 import uk.ac.ebi.fgpt.conan.model.ConanPipeline;
 import uk.ac.ebi.fgpt.conan.model.ConanTask;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
-import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
-import uk.ac.ebi.fgpt.conan.model.context.ExternalProcessConfiguration;
-import uk.ac.ebi.fgpt.conan.model.context.Locality;
-import uk.ac.ebi.fgpt.conan.model.context.Scheduler;
+import uk.ac.ebi.fgpt.conan.model.context.*;
 import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
 import uk.ac.ebi.fgpt.conan.properties.ConanProperties;
 import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
@@ -419,7 +416,7 @@ public abstract class AbstractConanCLI {
      * @throws TaskExecutionException
      * @throws IOException
      */
-    public void execute(ConanUser conanUser, ConanTask.Priority priority, ExecutionContext executionContext)
+    public TaskResult execute(ConanUser conanUser, ConanTask.Priority priority, ExecutionContext executionContext)
             throws InterruptedException, TaskExecutionException, IOException {
 
         if (this.help) {
@@ -453,8 +450,12 @@ public abstract class AbstractConanCLI {
             }
 
             log.info("Executing task: '" + conanTask.getId() + "'");
-            conanTask.execute(executionContext);
+            TaskResult result = conanTask.execute(executionContext);
             log.info("Finished executing task: '" + conanTask.getId() + "'");
+
+            return result;
         }
+
+        return null;
     }
 }

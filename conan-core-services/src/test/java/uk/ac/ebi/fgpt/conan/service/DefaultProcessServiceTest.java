@@ -24,12 +24,11 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
-import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
-import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
-import uk.ac.ebi.fgpt.conan.model.context.Locality;
-import uk.ac.ebi.fgpt.conan.model.context.Scheduler;
+import uk.ac.ebi.fgpt.conan.model.context.*;
 import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+
+import java.io.IOException;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.*;
@@ -58,17 +57,18 @@ public class DefaultProcessServiceTest {
     private ConanProcessService conanProcessService;
 
     @Before
-    public void setup() throws InterruptedException, ProcessExecutionException {
+    public void setup() throws InterruptedException, ProcessExecutionException, IOException {
         this.conanProcessService = new DefaultProcessService();
 
         when(scheduler.createCommand(anyString(), anyBoolean())).thenReturn("bsub \"sleep 10\"");
         when(scheduler.createProcessAdapter()).thenReturn(null);
+        when(scheduler.getResourceUsage((ExecutionResult)anyObject())).thenReturn(new ResourceUsage(1, 1, 1));
 
         when(locality.establishConnection()).thenReturn(true);
         when(locality.disconnect()).thenReturn(true);
-        when(locality.execute(anyString(), (Scheduler)anyObject())).thenReturn(new DefaultExecutionResult(0, null, null, -1));
-        when(locality.monitoredExecute(anyString(), (Scheduler)anyObject())).thenReturn(new DefaultExecutionResult(0, null, null, -1));
-        when(locality.dispatch(anyString(), (Scheduler)anyObject())).thenReturn(new DefaultExecutionResult(0, null, null, -1));
+        when(locality.execute(anyString(),anyString(), (Scheduler)anyObject())).thenReturn(new DefaultExecutionResult("test", 0, null, null, -1));
+        when(locality.monitoredExecute(anyString(),anyString(), (Scheduler)anyObject())).thenReturn(new DefaultExecutionResult("test", 0, null, null, -1, new ResourceUsage(0, 0, 0)));
+        when(locality.dispatch(anyString(), anyString(), (Scheduler)anyObject())).thenReturn(new DefaultExecutionResult("test", 0, null, null, -1));
 
         when(ec.getLocality()).thenReturn(locality);
         when(ec.getScheduler()).thenReturn(scheduler);

@@ -4,12 +4,14 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultTaskResult;
 import uk.ac.ebi.fgpt.conan.core.process.DefaultProcessRun;
 import uk.ac.ebi.fgpt.conan.model.ConanPipeline;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.ConanProcessRun;
 import uk.ac.ebi.fgpt.conan.model.ConanTask;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
@@ -174,13 +176,15 @@ public abstract class AbstractConanTask<P extends ConanPipeline> implements Cona
         return statusMessage;
     }
 
-    public boolean execute(ExecutionContext executionContext) throws TaskExecutionException, InterruptedException {
+    public DefaultTaskResult execute(ExecutionContext executionContext) throws TaskExecutionException, InterruptedException {
 
         // check the current state for execution
         checkState();
 
         StopWatch stopWatchTotal = new StopWatch();
         stopWatchTotal.start();
+
+        List<ExecutionResult> results = new ArrayList<>();
 
         log.info("Executing task '" + getId() + "'");
 
@@ -226,7 +230,8 @@ public abstract class AbstractConanTask<P extends ConanPipeline> implements Cona
                 }
 
                 // now execute
-                getCurrentProcess().execute(nextProcessParams, executionContext);
+                ExecutionResult result = getCurrentProcess().execute(nextProcessParams, executionContext);
+                results.add(result);
 
                 // once finished, update the end date
                 fireProcessEndedEvent();
@@ -235,8 +240,10 @@ public abstract class AbstractConanTask<P extends ConanPipeline> implements Cona
                 log.debug("Process '" + (processName == null ? "?" : processName) + "' runtime: " + stopWatchProcess.toString());
             }
 
+            stopWatchTotal.stop();
+
             // finalise task execution
-            return checkExitStatus();
+            return new DefaultTaskResult(this.ID, checkExitStatus(), results, stopWatchTotal.getTime() / 1000);
         }
         catch (ConanParameterException e) {
             log.error("Process '" + getCurrentProcess().getName() + "' did not start due to invalid parameters");
@@ -278,12 +285,11 @@ public abstract class AbstractConanTask<P extends ConanPipeline> implements Cona
                 setListeners(Collections.<ConanTaskListener>emptySet());
             }
 
-            stopWatchTotal.stop();
             log.info("Task '" + getId() + "' execution ended.  Runtime: " + stopWatchTotal.toString());
         }
     }
 
-    public boolean execute() throws TaskExecutionException, InterruptedException {
+    public DefaultTaskResult execute() throws TaskExecutionException, InterruptedException {
         return this.execute(new DefaultExecutionContext());
     }
 

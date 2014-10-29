@@ -4,6 +4,7 @@ import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
+import uk.ac.ebi.fgpt.conan.model.context.MultiWaitResult;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 
 import java.io.File;
@@ -100,14 +101,14 @@ public interface ConanProcessService {
 
     /**
      * Executes a scheduled wait command that waits for a list of other jobs to complete before finishing.
-     * @param jobIds The list of jobs to wait for.
+     * @param initialJobResults The initial results from the jobs to wait for.
      * @param waitCondition The wait condition (also defines the list of jobs to wait for).
      * @param exitStatusType Whether jobs must finish successfully or just need to finish
      * @param executionContext How to execute the wait job (must contain a scheduler).
      * @throws ProcessExecutionException
      * @throws InterruptedException
      */
-    void executeScheduledWait(List<Integer> jobIds, String waitCondition, ExitStatus.Type exitStatusType, ExecutionContext executionContext)
+    MultiWaitResult executeScheduledWait(List<ExecutionResult> initialJobResults, String waitCondition, ExitStatus.Type exitStatusType, ExecutionContext executionContext)
             throws ProcessExecutionException, InterruptedException;
 
 

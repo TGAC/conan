@@ -1,0 +1,31 @@
+Job was executed on host(s) <8*cn-128-18.tgaccluster>, in queue <Prod128>, as user <maplesod> in cluster <tgac-cluster>.
+</usr/users/ga002/maplesod> was used as the home directory.
+</tgac/workarea/users/maplesod/test/rampart/test1> was used as the working directory.
+Started at Tue Jul 15 14:29:26 2014
+Results reported at Tue Jul 15 14:29:59 2014
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+cd /tgac/workarea/users/maplesod/test/rampart/test1/mass/abyss-raw-kmer/k-61; source abyss-1.5.1; abyss-pe name=abyss k=61 np=8 lib='lib1896-pe' lib1896-pe='/tgac/workarea/users/maplesod/test/rampart/test1/LIB1896_R1.r95.fastq /tgac/workarea/users/maplesod/test/rampart/test1/LIB1896_R2.r95.fastq' 2>&1; cd /tgac/workarea/users/maplesod/test/rampart/test1
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :               137.81 sec.
+    Max Memory :             214 MB
+    Average Memory :         214.00 MB
+    Total Requested Memory : 4000.00 MB
+    Delta Memory :           3786.00 MB
+    (Delta: the difference between total requested memory and actual max usage.)
+    Max Swap :               2073 MB
+
+    Max Processes :          22
+    Max Threads :            24
+
+The output (if any) follows:
+
+/tgac/common/lsf/9.1.1/linux2.6-glibc2.3-x86_64/bin/mpirun.lsf -np 8 ABYSS-P -k61 -q3   --coverage-hist=coverage.hist -s abyss-bubbles.fa  -o abyss-1.fa /tgac/workarea/users/maplesod/test/rampart/test1/LIB1896_R1.r95.fastq /tgac/workarea/users/maplesod/test/rampart/test1/LIB1896_R2.r95.fastq

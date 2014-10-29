@@ -19,11 +19,14 @@ package uk.ac.ebi.fgpt.conan.core.context.scheduler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
+import uk.ac.ebi.fgpt.conan.model.context.ResourceUsage;
 import uk.ac.ebi.fgpt.conan.model.context.Scheduler;
 import uk.ac.ebi.fgpt.conan.model.context.SchedulerArgs;
 import uk.ac.ebi.fgpt.conan.model.monitor.ProcessAdapter;
 
 import java.io.File;
+import java.io.IOException;
 
 public abstract class AbstractScheduler implements Scheduler {
 
@@ -85,4 +88,16 @@ public abstract class AbstractScheduler implements Scheduler {
         return createProcessAdapter(new File(this.args.getMonitorFile().getAbsolutePath() + "." + jobArrayIndex), this.args.getMonitorInterval());
     }
 
+    @Override
+    public ResourceUsage getResourceUsage(ExecutionResult executionResult) throws IOException {
+
+        if (this.usesFileMonitor() && executionResult.getOutputFile().exists()) {
+            return this.getResourceUsageFromMonitorFile(executionResult.getOutputFile());
+        }
+        else if (this.generatesJobIdFromOutput()) {
+            return this.getResourceUsageFromId(executionResult.getJobId());
+        }
+
+        return null;
+    }
 }
