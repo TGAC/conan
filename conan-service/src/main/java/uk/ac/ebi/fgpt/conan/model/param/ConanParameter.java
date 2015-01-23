@@ -101,12 +101,20 @@ public interface ConanParameter extends Serializable {
     boolean isArgument();
 
     /**
-     * A flag indicating whether or not this parameter represents an output redirection to a file (i.e. it follows a ">")
+     * A flag indicating whether or not this parameter represents an standard output redirection to a file (i.e. it follows a ">")
      * Note that we currently do not support appending to a file only overwriting.
      *
      * @return True if this parameter represents an redirect to file
      */
-    boolean isRedirect();
+    boolean isStdOutRedirect();
+
+    /**
+     * A flag indicating whether or not this parameter represents an standard error redirection to a file (i.e. it follows a "2>")
+     * Note that we currently do not support appending to a file only overwriting.
+     *
+     * @return True if this parameter represents an redirect to file
+     */
+    boolean isStdErrRedirect();
 
     /**
      * If this parameter represents a program argument (i.e. it has no name and is order dependent).  Then this method

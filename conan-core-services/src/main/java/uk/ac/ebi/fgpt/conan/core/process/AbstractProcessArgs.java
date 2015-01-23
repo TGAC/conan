@@ -30,7 +30,11 @@ public abstract class AbstractProcessArgs implements ProcessArgs {
 
     protected abstract void setArgFromMapEntry(ConanParameter param, String value);
 
-    protected void setRedirectFromMapEntry(ConanParameter param, String value) {
+    protected void setStdOutRedirectFromMapEntry(ConanParameter param, String value) {
+
+    }
+
+    protected void setStdErrRedirectFromMapEntry(ConanParameter param, String value) {
 
     }
 
@@ -64,13 +68,24 @@ public abstract class AbstractProcessArgs implements ProcessArgs {
             this.setArgFromMapEntry(entry.getKey(), entry.getValue().trim());
         }
 
-        for(ParamMapEntry entry : pvp.getRedirectionList()) {
+        ParamMapEntry stdout = pvp.getStdOutRedirection();
 
-            if (!entry.getKey().validateParameterValue(entry.getValue())) {
-                throw new ConanParameterException("Redirect parameter invalid: " + entry.getKey().getIdentifier() + " : " + entry.getValue());
+        if (stdout != null) {
+            if (!stdout.getKey().validateParameterValue(stdout.getValue())) {
+                throw new ConanParameterException("Redirect parameter invalid: " + stdout.getKey().getIdentifier() + " : " + stdout.getValue());
             }
 
-            this.setRedirectFromMapEntry(entry.getKey(), entry.getValue().trim());
+            this.setStdOutRedirectFromMapEntry(stdout.getKey(), stdout.getValue().trim());
+        }
+
+        ParamMapEntry stderr = pvp.getStdErrRedirection();
+
+        if (stderr != null) {
+            if (!stderr.getKey().validateParameterValue(stderr.getValue())) {
+                throw new ConanParameterException("Redirect parameter invalid: " + stderr.getKey().getIdentifier() + " : " + stderr.getValue());
+            }
+
+            this.setStdErrRedirectFromMapEntry(stderr.getKey(), stderr.getValue().trim());
         }
     }
 
