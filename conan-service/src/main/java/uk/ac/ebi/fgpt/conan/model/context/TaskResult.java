@@ -20,6 +20,12 @@ public interface TaskResult {
     boolean isSuccess();
 
     /**
+     * Returns whether all process results finsihed successfully
+     * @return
+     */
+    boolean isAllSubTasksSuccess();
+
+    /**
      * The list of execution results for external processes executed during this task
      * @return
      */

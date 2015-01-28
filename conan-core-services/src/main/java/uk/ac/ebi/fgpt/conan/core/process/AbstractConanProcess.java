@@ -190,7 +190,7 @@ public abstract class AbstractConanProcess implements ConanProcess {
             commands.add(this.getPreCommand());
         }
 
-        commands.add(this.getCommand() + " 2>&1");
+        commands.add(this.getCommand());
 
         if (this.postCommands != null && !this.postCommands.isEmpty()) {
             commands.add(this.getPostCommand());
@@ -248,7 +248,7 @@ public abstract class AbstractConanProcess implements ConanProcess {
         // Add redirection string
         String redirection = this.processArgs.getArgMap().buildRedirectionString().trim();
         if (!redirection.isEmpty()) {
-            sb.append(" > ").append(redirection);
+            sb.append(" ").append(redirection);
         }
 
         commands.add(sb.toString().trim());

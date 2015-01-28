@@ -38,11 +38,19 @@ public interface ParamMap extends Map<ConanParameter, String> {
 
 
     /**
-     * Returns a list of the redirects in this map
+     * Returns the stdout redirect if present
      *
-     * @return A list of redirects returned in the appropriate order.
+     * @return The stdout redirect or null
      */
-    List<ParamMapEntry> getRedirectionList();
+    ParamMapEntry getStdOutRedirection() throws ConanParameterException;
+
+    /**
+     * Returns the stderr redirect if present
+     *
+     * @return The stderr redirect or null
+     */
+    ParamMapEntry getStdErrRedirection() throws ConanParameterException;
+
 
     /**
      * Builds a string representing the options in this map
@@ -84,7 +92,7 @@ public interface ParamMap extends Map<ConanParameter, String> {
      *
      * @throws java.lang.IllegalArgumentException If this parammap contains more than one redirection
      */
-    String buildRedirectionString();
+    String buildRedirectionString() throws ConanParameterException;
 
     /**
      * Validates that all the values in this map pass the corresponding parameters validation routine.

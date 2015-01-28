@@ -34,6 +34,18 @@ public class DefaultTaskResult implements TaskResult {
     }
 
     @Override
+    public boolean isAllSubTasksSuccess() {
+
+        for(ExecutionResult res : this.processResults) {
+            if (res.getExitCode() != 0) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    @Override
     public List<ExecutionResult> getProcessResults() {
         return processResults;
     }

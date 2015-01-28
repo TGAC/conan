@@ -62,17 +62,31 @@ public class DefaultParamMap extends LinkedHashMap<ConanParameter, String> imple
     }
 
     @Override
-    public List<ParamMapEntry> getRedirectionList() {
+    public ParamMapEntry getStdOutRedirection() throws ConanParameterException {
 
-        List<ParamMapEntry> redirects = new ArrayList<>(this.getNbRedirects());
-
-        for(Map.Entry<ConanParameter, String> entry : this.entrySet()) {
-            if (entry.getKey().isRedirect()) {
-                redirects.add(new DefaultParamMapEntry(entry.getKey(), entry.getValue()));
+        if (this.isRedirectingStdOut()) {
+            for (Map.Entry<ConanParameter, String> entry : this.entrySet()) {
+                if (entry.getKey().isStdOutRedirect()) {
+                    return new DefaultParamMapEntry(entry.getKey(), entry.getValue());
+                }
             }
         }
 
-        return redirects;
+        return null;
+    }
+
+    @Override
+    public ParamMapEntry getStdErrRedirection() throws ConanParameterException {
+
+        if (this.isRedirectingStdErr()) {
+            for (Map.Entry<ConanParameter, String> entry : this.entrySet()) {
+                if (entry.getKey().isStdErrRedirect()) {
+                    return new DefaultParamMapEntry(entry.getKey(), entry.getValue());
+                }
+            }
+        }
+
+        return null;
     }
 
     public int getNbArgs() {
@@ -87,16 +101,36 @@ public class DefaultParamMap extends LinkedHashMap<ConanParameter, String> imple
         return nbArgs;
     }
 
-    public int getNbRedirects() {
+    public boolean isRedirectingStdOut() throws ConanParameterException {
 
         int nbRedirects = 0;
         for(ConanParameter param : this.keySet()) {
-            if (param.isRedirect()) {
+            if (param.isStdOutRedirect()) {
                 nbRedirects++;
             }
         }
 
-        return nbRedirects;
+        if (nbRedirects > 1) {
+            throw new ConanParameterException("More than 1 stdout redirect requested");
+        }
+
+        return nbRedirects > 0;
+    }
+
+    public boolean isRedirectingStdErr() throws ConanParameterException {
+
+        int nbRedirects = 0;
+        for(ConanParameter param : this.keySet()) {
+            if (param.isStdErrRedirect()) {
+                nbRedirects++;
+            }
+        }
+
+        if (nbRedirects > 1) {
+            throw new ConanParameterException("More than 1 stderr redirect requested");
+        }
+
+        return nbRedirects > 0;
     }
 
     @Override
@@ -161,19 +195,20 @@ public class DefaultParamMap extends LinkedHashMap<ConanParameter, String> imple
     }
 
     @Override
-    public String buildRedirectionString() {
+    public String buildRedirectionString() throws ConanParameterException {
 
         StringBuilder redirectString = new StringBuilder();
 
-        List<ParamMapEntry> args = this.getRedirectionList();
-
-        if (args.size() > 1) {
-            throw new IllegalArgumentException("Can only redirect output to a single file");
+        if (this.isRedirectingStdOut()) {
+            redirectString.append(" > ").append(this.getStdOutRedirection().getValue());
         }
 
-        if (!args.isEmpty()) {
+        if (this.isRedirectingStdErr()) {
+            redirectString.append(" 2> ").append(this.getStdErrRedirection().getValue());
+        }
 
-            redirectString.append(args.get(0).getValue());
+        if (!this.isRedirectingStdErr() && !this.isRedirectingStdOut()) {
+            redirectString.append(" 2>&1");
         }
 
         return redirectString.toString();

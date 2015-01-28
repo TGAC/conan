@@ -27,7 +27,8 @@ public class DefaultConanParameter implements ConanParameter {
     public static enum ParamType {
         OPTION,
         ARGUMENT,
-        REDIRECTION
+        STDOUT_REDIRECTION,
+        STDERR_REDIRECTION
     }
 
     protected String name;
@@ -108,8 +109,11 @@ public class DefaultConanParameter implements ConanParameter {
         else if (this.paramType == ParamType.ARGUMENT) {
             return "Arg index: " + Integer.toString(this.argIndex);
         }
-        else if (this.paramType == ParamType.REDIRECTION) {
-            return "Redirect";
+        else if (this.paramType == ParamType.STDOUT_REDIRECTION) {
+            return "Standard Out Redirect";
+        }
+        else if (this.paramType == ParamType.STDERR_REDIRECTION) {
+            return "Standard Error Redirect";
         }
 
         throw new UnsupportedOperationException("Unknown param type set: " + this.paramType.toString());
@@ -161,8 +165,13 @@ public class DefaultConanParameter implements ConanParameter {
     }
 
     @Override
-    public boolean isRedirect() {
-        return this.paramType == ParamType.REDIRECTION;
+    public boolean isStdOutRedirect() {
+        return this.paramType == ParamType.STDOUT_REDIRECTION;
+    }
+
+    @Override
+    public boolean isStdErrRedirect() {
+        return this.paramType == ParamType.STDERR_REDIRECTION;
     }
 
     @Override
@@ -221,8 +230,11 @@ public class DefaultConanParameter implements ConanParameter {
         else if (this.paramType == ParamType.ARGUMENT) {
             return "Arg index: " + argIndex + "; Description: " + description + "; Is required: " + Boolean.toString(this.isRequired());
         }
-        else if (this.paramType == ParamType.REDIRECTION) {
-            return "Redirection";
+        else if (this.paramType == ParamType.STDOUT_REDIRECTION) {
+            return "Standard Out Redirect";
+        }
+        else if (this.paramType == ParamType.STDERR_REDIRECTION) {
+            return "Standard Error Redirect";
         }
 
         throw new UnsupportedOperationException("Unknown param type set: " + this.paramType.toString());
