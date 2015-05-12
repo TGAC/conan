@@ -73,6 +73,7 @@ public class LSFArgs extends SchedulerArgs {
         joiner.add(this.getThreads() > 1, "-n", String.valueOf(this.getThreads()));
         joiner.add("-P", this.getProjectName());
         joiner.add(this.isOpenmpi(), "-a", "openmpi");
+        joiner.add(this.getEstimatedRuntimeMins() > 0, "-We", String.valueOf(this.getEstimatedRuntimeMins()));
         joiner.add(!this.getExtraArgs().startsWith("-R"), "", this.getExtraArgs());
 
         return joiner.toString();

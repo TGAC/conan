@@ -79,6 +79,7 @@ public class PBSScheduler extends AbstractScheduler {
         sj.add("-W block=true," + waitCondition);
         sj.add("-q", this.getArgs().getQueueName());
         sj.add("-eo", this.getArgs().getMonitorFile());
+        sj.add("-l walltime=1");
 
         return sj.toString();
     }

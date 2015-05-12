@@ -107,6 +107,8 @@ public class PBSArgs extends SchedulerArgs {
         joiner.add(this.getThreads() > 0, "select=", Integer.toString(1));
         joiner.add(this.getThreads() > 0, "ncpus=", Integer.toString(this.getThreads()));
         joiner.add(this.getMemoryMB() > 0, "mem=", Integer.toString(this.getMemoryGB()) + "G");
+        // PBS only has no estimated walltime so we simply multiply the estimated walltime by 5 to give us a reasonable window to complete the job.
+        joiner.add(this.getEstimatedRuntimeMins() > 0, "walltime=", Integer.toString(this.getEstimatedRuntimeMins() * 5));
 
         return this.getThreads() > 0 || this.getMemoryMB() > 0 ? "-l " + joiner.toString() : "";
     }
