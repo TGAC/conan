@@ -45,7 +45,7 @@ public class PBSSchedulerTest {
                 this.pbsScheduler.createWaitCondition(PBSExitStatus.AFTER_OK.getExitStatus(), "1001")
         );
 
-        String correct = "echo \"sleep 1 2>&1\" |  qsub -W block=true,depend=afterok:1001";
+        String correct = "echo \"sleep 1 2>&1\" |  qsub -W block=true,depend=afterok:1001 -l walltime=1";
 
         assertTrue(command.equals(correct));
     }

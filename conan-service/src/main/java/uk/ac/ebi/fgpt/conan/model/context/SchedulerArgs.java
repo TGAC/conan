@@ -14,6 +14,7 @@ public abstract class SchedulerArgs {
     private String projectName;
     private int threads;
     private int memoryMB;
+    private int estimatedRuntimeMins;
     private String extraArgs;
     private boolean openmpi;
     private String waitCondition;
@@ -27,6 +28,7 @@ public abstract class SchedulerArgs {
         this.projectName = "";
         this.threads = 0;
         this.memoryMB = 0;
+        this.estimatedRuntimeMins = 0;
         this.extraArgs = "";
         this.openmpi = false;
         this.monitorFile = null;
@@ -40,6 +42,7 @@ public abstract class SchedulerArgs {
         this.projectName = args.getProjectName();
         this.threads = args.getThreads();
         this.memoryMB = args.getMemoryMB();
+        this.estimatedRuntimeMins = args.getEstimatedRuntimeMins();
         this.extraArgs = args.getExtraArgs();
         this.openmpi = args.isOpenmpi();
         this.waitCondition = args.getWaitCondition();
@@ -90,6 +93,14 @@ public abstract class SchedulerArgs {
 
     public void setMemoryMB(int memoryMB) {
         this.memoryMB = memoryMB;
+    }
+
+    public int getEstimatedRuntimeMins() {
+        return estimatedRuntimeMins;
+    }
+
+    public void setEstimatedRuntimeMins(int estimatedRuntimeMins) {
+        this.estimatedRuntimeMins = estimatedRuntimeMins;
     }
 
     public String getExtraArgs() {

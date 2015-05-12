@@ -28,6 +28,6 @@ public class DefaultExecutorServiceTest {
     //@Test
     public void testExecuteJobArray() throws Exception {
 
-        ExecutionResult res = this.lsfExecutorService.executeJobArray("sleep 10", temp.newFolder("sleep1"), "sleepy", new SchedulerArgs.JobArrayArgs(1, 5, 1, -1), 1, 0);
+        ExecutionResult res = this.lsfExecutorService.executeJobArray("sleep 10", temp.newFolder("sleep1"), "sleepy", new SchedulerArgs.JobArrayArgs(1, 5, 1, -1), 1, 0, 0);
     }
 }

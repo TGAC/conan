@@ -47,7 +47,7 @@ public class DefaultExecutorService implements ConanExecutorService {
     @Override
     public ExecutionResult executeJobArray(String command, File outputDir, String jobArrayName,
                                            SchedulerArgs.JobArrayArgs jobArrayArgs,
-                                           int threadsPerJob, int memPerJob)
+                                           int threadsPerJob, int memPerJob, int estimatedWalltimePerJobMins)
             throws ProcessExecutionException, InterruptedException {
 
         if (!this.usingScheduler()) {
@@ -61,6 +61,7 @@ public class DefaultExecutorService implements ConanExecutorService {
         SchedulerArgs sArgs = executionContextCopy.getScheduler().getArgs();
         sArgs.setThreads(threadsPerJob);
         sArgs.setMemoryMB(memPerJob);
+        sArgs.setEstimatedRuntimeMins(estimatedWalltimePerJobMins);
         sArgs.setJobArrayArgs(jobArrayArgs);
 
         String modifiedCommand = command.replace(CONAN_JOB_INDEX, executionContextCopy.getScheduler().getJobIndexString());
@@ -74,20 +75,28 @@ public class DefaultExecutorService implements ConanExecutorService {
                                           int memoryMb, boolean runParallel)
             throws InterruptedException, ProcessExecutionException {
 
-        return this.executeProcess(process, outputDir, jobName, threads, memoryMb, runParallel, null);
+        return this.executeProcess(process, outputDir, jobName, threads, memoryMb, 0, runParallel, null);
     }
 
     @Override
     public ExecutionResult executeProcess(ConanProcess process, File outputDir, String jobName, int threads,
-                                          int memoryMb, boolean runParallel, List<Integer> dependantJobs)
+                                          int memoryMb, int estimatedWalltimeMins, boolean runParallel)
             throws InterruptedException, ProcessExecutionException {
 
-        return this.executeProcess(process, outputDir, jobName, threads, memoryMb, runParallel, null, false);
+        return this.executeProcess(process, outputDir, jobName, threads, memoryMb, estimatedWalltimeMins, runParallel, null);
     }
 
     @Override
     public ExecutionResult executeProcess(ConanProcess process, File outputDir, String jobName, int threads,
-                                          int memoryMb, boolean runParallel, List<Integer> dependantJobs, boolean openmpi)
+                                          int memoryMb, int estimatedWalltimeMins, boolean runParallel, List<Integer> dependantJobs)
+            throws InterruptedException, ProcessExecutionException {
+
+        return this.executeProcess(process, outputDir, jobName, threads, memoryMb, estimatedWalltimeMins, runParallel, null, false);
+    }
+
+    @Override
+    public ExecutionResult executeProcess(ConanProcess process, File outputDir, String jobName, int threads,
+                                          int memoryMb, int estimatedWalltimeMins, boolean runParallel, List<Integer> dependantJobs, boolean openmpi)
             throws InterruptedException, ProcessExecutionException {
 
         ExecutionContext executionContextCopy = this.executionContext.copy();
@@ -98,6 +107,7 @@ public class DefaultExecutorService implements ConanExecutorService {
             SchedulerArgs sArgs = executionContextCopy.getScheduler().getArgs();
             sArgs.setThreads(threads);
             sArgs.setMemoryMB(memoryMb);
+            sArgs.setEstimatedRuntimeMins(estimatedWalltimeMins);
 
             // Add wait condition for subsampling jobs (or any other jobs that must finish first), assuming there are any
             if (dependantJobs != null && !dependantJobs.isEmpty()) {
@@ -114,7 +124,7 @@ public class DefaultExecutorService implements ConanExecutorService {
     }
 
     @Override
-    public ExecutionResult executeProcess(String command, File outputDir, String jobName, int threads, int memoryMb, boolean runParallel)
+    public ExecutionResult executeProcess(String command, File outputDir, String jobName, int threads, int memoryMb, int estimatedWalltimeMins, boolean runParallel)
             throws InterruptedException, ProcessExecutionException {
 
         ExecutionContext executionContextCopy = this.executionContext.copy();
@@ -125,6 +135,7 @@ public class DefaultExecutorService implements ConanExecutorService {
             SchedulerArgs sArgs = executionContext.getScheduler().getArgs();
             sArgs.setThreads(threads);
             sArgs.setMemoryMB(memoryMb);
+            sArgs.setEstimatedRuntimeMins(estimatedWalltimeMins);
         }
 
         return this.conanProcessService.execute(command, executionContextCopy);

@@ -53,13 +53,14 @@ public interface ConanExecutorService {
      * @param jobArrayArgs The job array indices
      * @param threadsPerJob The threads to request per job from the scheduler
      * @param memPerJob The memory to request per job from the scheduler
+     * @param estimatedRuntimePerJobMins The estimated runtime per job in minutes
      * @return  An executionResult object containing the job array id and the jobs standard output.
      * @throws ProcessExecutionException
      * @throws InterruptedException
      */
     ExecutionResult executeJobArray(String command, File outputDir, String jobArrayName,
                                     SchedulerArgs.JobArrayArgs jobArrayArgs,
-                                    int threadsPerJob, int memPerJob)
+                                    int threadsPerJob, int memPerJob, int estimatedRuntimePerJobMins)
             throws ProcessExecutionException, InterruptedException;
 
     /**
@@ -78,8 +79,8 @@ public interface ConanExecutorService {
      * @throws InterruptedException
      * @throws ProcessExecutionException
      */
-    ExecutionResult executeProcess(ConanProcess process, File outputDir, String jobName, int threads,
-                                   int memoryMb, boolean runParallel)
+    public ExecutionResult executeProcess(ConanProcess process, File outputDir, String jobName, int threads,
+                                          int memoryMb, boolean runParallel)
             throws InterruptedException, ProcessExecutionException;
 
     /**
@@ -93,6 +94,28 @@ public interface ConanExecutorService {
      * @param jobName The schedulers job name
      * @param threads The threads to request from the scheduler
      * @param memoryMb The memory to request from the scheduler
+     * @param estimatedRuntimePerJobMins The estimated runtime per job in minutes
+     * @param runParallel Whether to run this job in the foreground or the background
+     * @return An executionResult object containing the job id (if run on a scheduler) and the jobs standard output.
+     * @throws InterruptedException
+     * @throws ProcessExecutionException
+     */
+    ExecutionResult executeProcess(ConanProcess process, File outputDir, String jobName, int threads,
+                                   int memoryMb, int estimatedRuntimePerJobMins, boolean runParallel)
+            throws InterruptedException, ProcessExecutionException;
+
+    /**
+     * Executes a conan process within the defined execution context.  We can supply resource data for use by the
+     * scheduler (if requested).  The runParallel options allows us to execute this job in parallel with other jobs.  i.e
+     * we don't wait for the job to complete before returning.  In this case the method returns an ExecutionResult object
+     * which will contain the allocated jobId which the client can manually track and use with the executeScheduledWait
+     * command to control where the program flow should pause until the job's completion.
+     * @param process The process to execute
+     * @param outputDir Where output from this process should go
+     * @param jobName The schedulers job name
+     * @param threads The threads to request from the scheduler
+     * @param memoryMb The memory to request from the scheduler
+     * @param estimatedRuntimePerJobMins The estimated runtime per job in minutes
      * @param runParallel Whether to run this job in the foreground or the background
      * @param dependentJobs The list of jobs that should complete (one way or another) before this job should start
      * @return An executionResult object containing the job id (if run on a scheduler) and the jobs standard output.
@@ -100,7 +123,7 @@ public interface ConanExecutorService {
      * @throws ProcessExecutionException
      */
     ExecutionResult executeProcess(ConanProcess process, File outputDir, String jobName, int threads,
-                                   int memoryMb, boolean runParallel, List<Integer> dependentJobs)
+                                   int memoryMb, int estimatedRuntimePerJobMins, boolean runParallel, List<Integer> dependentJobs)
             throws InterruptedException, ProcessExecutionException;
 
     /**
@@ -114,6 +137,7 @@ public interface ConanExecutorService {
      * @param jobName The schedulers job name
      * @param threads The threads to request from the scheduler
      * @param memoryMb The memory to request from the scheduler
+     * @param estimatedRuntimePerJobMins The estimated runtime per job in minutes
      * @param runParallel Whether to run this job in the foreground or the background
      * @param dependentJobs The list of jobs that should complete (one way or another) before this job should start
      * @param openmpi Whether this job uses openmpi or not
@@ -122,7 +146,7 @@ public interface ConanExecutorService {
      * @throws ProcessExecutionException
      */
     ExecutionResult executeProcess(ConanProcess process, File outputDir, String jobName, int threads,
-                                   int memoryMb, boolean runParallel, List<Integer> dependentJobs, boolean openmpi)
+                                   int memoryMb, int estimatedRuntimePerJobMins, boolean runParallel, List<Integer> dependentJobs, boolean openmpi)
             throws InterruptedException, ProcessExecutionException;
 
     /**
@@ -136,13 +160,14 @@ public interface ConanExecutorService {
      * @param jobName The schedulers job name
      * @param threads The threads to request from the scheduler
      * @param memoryMb The memory to request from the scheduler
+     * @param estimatedRuntimePerJobMins The estimated runtime per job in minutes
      * @param runParallel Whether to run this job in the foreground or the background
      * @return An executionResult object containing the job id (if run on a scheduler) and the jobs standard output.
      * @throws InterruptedException
      * @throws ProcessExecutionException
      */
     ExecutionResult executeProcess(String command, File outputDir, String jobName, int threads,
-                                   int memoryMb, boolean runParallel)
+                                   int memoryMb, int estimatedRuntimePerJobMins, boolean runParallel)
             throws InterruptedException, ProcessExecutionException;
 
     /**
