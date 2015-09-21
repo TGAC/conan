@@ -36,9 +36,11 @@ public class DefaultTaskResult implements TaskResult {
     @Override
     public boolean isAllSubTasksSuccess() {
 
-        for(ExecutionResult res : this.processResults) {
-            if (res.getExitCode() != 0) {
-                return false;
+        if (this.processResults != null) {
+            for (ExecutionResult res : this.processResults) {
+                if (res.getExitCode() != 0) {
+                    return false;
+                }
             }
         }
 
@@ -112,12 +114,14 @@ public class DefaultTaskResult implements TaskResult {
         lines.add("  Total wall clock runtime (s): " + this.actualTotalRuntime);
         lines.add("  Total CPU time from combined sub-processes (s): " + this.getTotalExternalCputime());
         lines.add("  Max memory usage of uncombined sub-processes (MB): " + this.getMaxMemUsage());
-        lines.add("");
-        lines.add("Number of sub-processes executed for this task: " + this.processResults.size());
-        lines.add("Breakdown of sub-processes:");
-        lines.add("Name\tExitCode\tJobID\tMaxMem(MB)\tWallClock(s)\tCPUTime(s)");
-        for(ExecutionResult result : this.processResults) {
-            lines.add(result.toString());
+        if (this.processResults != null) {
+            lines.add("");
+            lines.add("Number of sub-processes executed for this task: " + this.processResults.size());
+            lines.add("Breakdown of sub-processes:");
+            lines.add("Name\tExitCode\tJobID\tMaxMem(MB)\tWallClock(s)\tCPUTime(s)");
+            for (ExecutionResult result : this.processResults) {
+                lines.add(result.toString());
+            }
         }
 
         return lines;

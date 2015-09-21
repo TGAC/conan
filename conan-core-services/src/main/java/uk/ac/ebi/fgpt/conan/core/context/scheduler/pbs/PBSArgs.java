@@ -67,6 +67,10 @@ public class PBSArgs extends SchedulerArgs {
                 sb.append(":").append(ja.getStepIndex());
             }
 
+            if (ja.getMaxSimultaneousJobs() > 1) {
+                sb.append("%").append(ja.getMaxSimultaneousJobs());
+            }
+
             joiner.add("-J", sb.toString());
 
             if (this.getMonitorFile() != null) {
