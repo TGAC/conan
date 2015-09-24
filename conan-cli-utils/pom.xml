@@ -6,10 +6,10 @@
     <parent>
         <groupId>uk.ac.ebi.fgpt.conan</groupId>
         <artifactId>conan</artifactId>
-        <version>3.3.0</version>
+        <version>3.3.2</version>
     </parent>
     <artifactId>conan-cli-utils</artifactId>
-    <version>3.3.0</version>
+    <version>3.3.2</version>
     <name>Conan: Utilities for executing shell processes</name>
 
     <dependencies>
