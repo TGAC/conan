@@ -6,7 +6,7 @@
     <parent>
         <groupId>uk.ac.ebi.fgpt.conan</groupId>
         <artifactId>conan</artifactId>
-        <version>3.3.2</version>
+        <version>3.3.3</version>
     </parent>
     <artifactId>jndi-file-factory</artifactId>
     <version>1.0</version>

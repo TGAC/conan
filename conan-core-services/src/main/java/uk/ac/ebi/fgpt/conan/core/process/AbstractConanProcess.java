@@ -222,7 +222,7 @@ public abstract class AbstractConanProcess implements ConanProcess {
         List<String> commands = new ArrayList<>();
 
         StringBuilder sb = new StringBuilder();
-        sb.append(this.executable);
+        sb.append(this.getExecutable());
 
         // Add the mode, if this process has one.
         if (!this.mode.isEmpty()) {
