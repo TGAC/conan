@@ -39,7 +39,7 @@ public class SlurmScheduler extends AbstractScheduler {
 
     private static Logger log = LoggerFactory.getLogger(SlurmScheduler.class);
 
-    public static final String EXE = "";
+    public static final String SBATCH = "sbatch";
     public static final String ARG_SEPARATOR = ":";
 
     public SlurmScheduler() {
@@ -47,7 +47,7 @@ public class SlurmScheduler extends AbstractScheduler {
     }
 
     public SlurmScheduler(SlurmArgs args) {
-        super(EXE, args);
+        super(SBATCH, args);
     }
 
     @Override
@@ -58,44 +58,38 @@ public class SlurmScheduler extends AbstractScheduler {
     @Override
     public String createCommand(String internalCommand, boolean isForegroundJob) {
 
-        StringJoiner slurmJoiner = new StringJoiner(" ");
-
-        slurmJoiner.add(isForegroundJob ? "salloc" : "sbatch");
-        slurmJoiner.add(this.getArgs() != null, "", ((SlurmArgs)this.getArgs()).toString(isForegroundJob));
-
         if (isForegroundJob) {
-            slurmJoiner.add(internalCommand);
+            String commandPart = "echo -e \"" + internalCommand + "\"";
+
+            // create PBS part
+            StringJoiner slurmPartJoiner = new StringJoiner(" ");
+            slurmPartJoiner.add("salloc");
+            slurmPartJoiner.add(this.getArgs() != null, "", ((SlurmArgs)this.getArgs()).toString());
+
+            String slurmPart = slurmPartJoiner.toString();
+
+            return commandPart + " | " + slurmPart;
         }
         else {
-            List<String> batchFileContents = new ArrayList<>();
-            batchFileContents.add("#!/bin/bash");
-            batchFileContents.add(internalCommand);
+            StringJoiner slurmPartJoiner = new StringJoiner(" ");
+            slurmPartJoiner.add("sbatch");
+            slurmPartJoiner.add(this.getArgs() != null, "", ((SlurmArgs) this.getArgs()).toString());
+            slurmPartJoiner.add("--wrap=\"" + internalCommand + "\"");
 
-            File batchFile = new File(this.getArgs().getMonitorFile().getParentFile(), this.getArgs().getMonitorFile().getName() + ".batch");
-            try {
-                FileUtils.writeLines(batchFile, batchFileContents);
-            } catch (IOException e) {
-                log.error("Could not create SLURM batch file at: " + batchFile.getAbsolutePath());
-            }
-
-            batchFile.setExecutable(true);
-
-            slurmJoiner.add(batchFile);
+            return slurmPartJoiner.toString();
         }
 
-        return slurmJoiner.toString();
+
     }
 
     @Override
     public String createWaitCommand(String waitCondition) {
 
+        // Create command to execute
         StringJoiner sj = new StringJoiner(" ");
-        sj.add("salloc");
+        sj.add("srun");
         sj.add("-d" + waitCondition);
         sj.add("-p", this.getArgs().getQueueName());
-        sj.add("-e", this.getArgs().getMonitorFile());
-        sj.add("-o", this.getArgs().getMonitorFile());
-        sj.add("--time=1");
         sj.add("sleep 1");
 
         return sj.toString();
@@ -141,19 +135,31 @@ public class SlurmScheduler extends AbstractScheduler {
 
     @Override
     public boolean generatesJobIdFromOutput() {
+        return false;
+    }
+
+    @Override
+    public boolean generatesJobIdFromError() {
         return true;
     }
+
 
     @Override
     public int extractJobIdFromOutput(String line) {
 
         String[] parts = line.split(" ");
 
-        if (parts.length >= 4) {
+        if (parts.length == 4) {
             return Integer.parseInt(parts[3]);
         }
+        else if (parts.length == 5) {
+            return Integer.parseInt(parts[4]);
+        }
+        else {
+            return -1;
+        }
 
-        throw new IllegalArgumentException("Could not extract SLURM job id from: " + line);
+//        throw new IllegalArgumentException("Could not extract SLURM job id from: " + line);
     }
 
     @Override
@@ -168,7 +174,6 @@ public class SlurmScheduler extends AbstractScheduler {
 
     @Override
     public ResourceUsage getResourceUsageFromId(int id) {
-
 
         // Run tracejob with ID
         ProcessRunner runner = new ProcessRunner();
@@ -196,11 +201,22 @@ public class SlurmScheduler extends AbstractScheduler {
 
         String[] parts = line.split("\\s+");
 
-        int maxMem = Integer.parseInt(parts[1].substring(0, parts[1].length() - 1)) / 1000;
-        long cpuTime = timeToSeconds(parts[0]);
-        long wallClock = timeToSeconds(parts[2]);
+        if (parts.length == 3) {
+            int maxMem = Integer.parseInt(parts[1].substring(0, parts[1].length() - 1)) / 1000;
+            long cpuTime = timeToSeconds(parts[0]);
+            long wallClock = timeToSeconds(parts[2]);
 
-        return new ResourceUsage(maxMem, wallClock, cpuTime);
+            return new ResourceUsage(maxMem, wallClock, cpuTime);
+        }
+        else if (parts.length == 2) {
+            long cpuTime = timeToSeconds(parts[0]);
+            long wallClock = timeToSeconds(parts[1]);
+
+            return new ResourceUsage(0, wallClock, cpuTime);
+        }
+        else {
+            throw new IllegalStateException("Unexpected results from sacct");
+        }
     }
 
     private long timeToSeconds(String time) {

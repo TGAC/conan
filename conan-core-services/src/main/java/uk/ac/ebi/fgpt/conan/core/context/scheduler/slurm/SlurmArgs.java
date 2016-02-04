@@ -45,7 +45,7 @@ public class SlurmArgs extends SchedulerArgs {
 
         if (this.getJobArrayArgs() == null) {
 
-            if (this.getMonitorFile() != null) {
+            if (this.getMonitorFile() != null && !isForegroundJob) {
                 joiner.add("-o", new File(this.getMonitorFile().getParentFile(), this.getMonitorFile().getName() + ".stdout"));
                 joiner.add("-e", new File(this.getMonitorFile().getParentFile(), this.getMonitorFile().getName() + ".stderr"));
             }
@@ -66,23 +66,25 @@ public class SlurmArgs extends SchedulerArgs {
 
             joiner.add("-a", sb.toString());
 
-            if (this.getMonitorFile() != null) {
+            if (this.getMonitorFile() != null && !isForegroundJob) {
                 joiner.add("-o", new File(this.getMonitorFile().getParentFile(), this.getMonitorFile().getName() + ".%a.stdout"));
                 joiner.add("-e", new File(this.getMonitorFile().getParentFile(), this.getMonitorFile().getName() + ".%a.stderr"));
             }
         }
 
-        joiner.add("-N", "1");
-        joiner.add(this.getThreads() > 1, "-n", Integer.toString(this.getThreads()));
-        joiner.add("-p", this.getQueueName());
-        joiner.add("-J", this.getJobName());
+        joiner.add("-N ", "1");
+        joiner.add(this.getThreads() > 1, "-n ", Integer.toString(this.getThreads()));
+        joiner.add("-p ", this.getQueueName());
+        joiner.add("-J ", this.getJobName());
+        joiner.add("-D ", "$(pwd)");
+        joiner.add("--profile=all");
         joiner.add(this.getMemoryMB() > 0, "", "--mem=" + Integer.toString(this.getMemoryMB()));
         joiner.add(this.getEstimatedRuntimeMins() > 0, "-t", Integer.toString(this.getEstimatedRuntimeMins()));
         joiner.add(this.getWaitCondition() != null && !this.getWaitCondition().isEmpty(), "-d", this.getWaitCondition());
 
         joiner.add(this.getExtraArgs());
 
-        return "--get-user-env " + joiner.toString();
+        return joiner.toString();
     }
 
     @Override

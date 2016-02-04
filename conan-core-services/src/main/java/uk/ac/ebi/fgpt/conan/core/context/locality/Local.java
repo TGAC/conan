@@ -229,11 +229,13 @@ public class Local implements Locality {
     public ExecutionResult execute(String processName, String command, Scheduler scheduler) throws ProcessExecutionException, InterruptedException {
 
         String[] output;
+        String[] error;
 
         try {
             ProcessRunner runner = new ProcessRunner();
-            runner.redirectStderr(true);
+            runner.redirectStderr(false);
             output = runner.runCommmand(command);
+            error = runner.getStderr();
 
         } catch (CommandExecutionException e) {
 
@@ -263,6 +265,9 @@ public class Local implements Locality {
 
             if (scheduler.generatesJobIdFromOutput()) {
                 jobId = scheduler.extractJobIdFromOutput(output[0]);
+            }
+            else if (scheduler.generatesJobIdFromError()) {
+                jobId = scheduler.extractJobIdFromOutput(error[0]);
             }
 
             if (scheduler.getArgs() != null && scheduler.getArgs().getMonitorFile() != null) {

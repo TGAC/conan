@@ -94,10 +94,15 @@ public abstract class AbstractScheduler implements Scheduler {
         if (this.usesFileMonitor() && executionResult.getOutputFile().exists()) {
             return this.getResourceUsageFromMonitorFile(executionResult.getOutputFile());
         }
-        else if (this.generatesJobIdFromOutput()) {
+        else if (this.generatesJobIdFromOutput() || this.generatesJobIdFromError()) {
             return this.getResourceUsageFromId(executionResult.getJobId());
         }
 
         return null;
+    }
+
+    @Override
+    public boolean generatesJobIdFromError() {
+        return false;
     }
 }
