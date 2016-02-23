@@ -130,6 +130,12 @@ public interface Scheduler {
     boolean generatesJobIdFromOutput();
 
     /**
+     * Used to mark whether or not this scheduler generates a job id from the standard output
+     * @return
+     */
+    boolean generatesJobIdFromError();
+
+    /**
      * Parses an output line to get the job id
      * @param line
      * @return

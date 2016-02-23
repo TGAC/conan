@@ -203,6 +203,9 @@ public class ProcessRunner {
         this.stderr = stderr;
     }
 
+    public String[] getStdout() {return this.stdout;}
+    public String[] getStderr() {return this.stderr;}
+
     /**
      * Blocks until both stdout and stderr streams have been fully read.
      *
