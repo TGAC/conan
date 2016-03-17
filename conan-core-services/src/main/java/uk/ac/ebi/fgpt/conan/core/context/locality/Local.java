@@ -263,11 +263,16 @@ public class Local implements Locality {
 
         if (scheduler != null) {
 
-            if (scheduler.generatesJobIdFromOutput()) {
-                jobId = scheduler.extractJobIdFromOutput(output[0]);
-            }
-            else if (scheduler.generatesJobIdFromError()) {
-                jobId = scheduler.extractJobIdFromOutput(error[0]);
+            if (scheduler.generatesJobIdFromOutput() || scheduler.generatesJobIdFromError()) {
+                if (output.length > 0 && scheduler.generatesJobIdFromOutput()) {
+                    jobId = scheduler.extractJobIdFromOutput(output[0]);
+                }
+                else if (error.length > 0 && scheduler.generatesJobIdFromError()) {
+                    jobId = scheduler.extractJobIdFromOutput(error[0]);
+                }
+                else {
+                    throw new ProcessExecutionException(2, "Could not retrieve job id from scheduler");
+                }
             }
 
             if (scheduler.getArgs() != null && scheduler.getArgs().getMonitorFile() != null) {
@@ -276,7 +281,7 @@ public class Local implements Locality {
         }
 
         if (jobId != -1)
-            log.debug("Job ID detected: " + jobId);
+            log.info("Job ID detected: " + jobId);
 
         return new DefaultExecutionResult(processName, 0, output, outputFile, jobId);
     }

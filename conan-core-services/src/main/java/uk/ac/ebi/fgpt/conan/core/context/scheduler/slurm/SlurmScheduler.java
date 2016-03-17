@@ -65,6 +65,9 @@ public class SlurmScheduler extends AbstractScheduler {
             StringJoiner slurmPartJoiner = new StringJoiner(" ");
             slurmPartJoiner.add("salloc");
             slurmPartJoiner.add(this.getArgs() != null, "", ((SlurmArgs)this.getArgs()).toString());
+            if (this.getArgs().getMonitorFile() != null) {
+                slurmPartJoiner.add("> ", this.getArgs().getMonitorFile().getAbsolutePath());
+            }
 
             String slurmPart = slurmPartJoiner.toString();
 
@@ -74,6 +77,10 @@ public class SlurmScheduler extends AbstractScheduler {
             StringJoiner slurmPartJoiner = new StringJoiner(" ");
             slurmPartJoiner.add("sbatch");
             slurmPartJoiner.add(this.getArgs() != null, "", ((SlurmArgs) this.getArgs()).toString());
+            if (this.getArgs().getMonitorFile() != null) {
+                slurmPartJoiner.add("-o", new File(this.getArgs().getMonitorFile().getParentFile(), this.getArgs().getMonitorFile().getName() + ".stdout"));
+                slurmPartJoiner.add("-e", new File(this.getArgs().getMonitorFile().getParentFile(), this.getArgs().getMonitorFile().getName() + ".stderr"));
+            }
             slurmPartJoiner.add("--wrap=\"" + internalCommand + "\"");
 
             return slurmPartJoiner.toString();
@@ -87,10 +94,12 @@ public class SlurmScheduler extends AbstractScheduler {
 
         // Create command to execute
         StringJoiner sj = new StringJoiner(" ");
-        sj.add("srun");
+        sj.add("echo -e \"sleep 1\" | salloc");
         sj.add("-d" + waitCondition);
         sj.add("-p", this.getArgs().getQueueName());
-        sj.add("sleep 1");
+        if (this.getArgs().getMonitorFile() != null) {
+            sj.add(" > " + this.getArgs().getMonitorFile().getAbsolutePath());
+        }
 
         return sj.toString();
     }
@@ -135,7 +144,7 @@ public class SlurmScheduler extends AbstractScheduler {
 
     @Override
     public boolean generatesJobIdFromOutput() {
-        return false;
+        return true;
     }
 
     @Override

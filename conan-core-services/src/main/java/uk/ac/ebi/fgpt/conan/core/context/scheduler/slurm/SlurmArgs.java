@@ -73,7 +73,8 @@ public class SlurmArgs extends SchedulerArgs {
         }
 
         joiner.add("-N ", "1");
-        joiner.add(this.getThreads() > 1, "-n ", Integer.toString(this.getThreads()));
+        joiner.add("-n ", "1");
+        joiner.add(this.getThreads() > 1, "-c ", Integer.toString(this.getThreads()));
         joiner.add("-p ", this.getQueueName());
         joiner.add("-J ", this.getJobName());
         joiner.add("-D ", "$(pwd)");
